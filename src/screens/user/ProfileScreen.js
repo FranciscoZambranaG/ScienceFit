@@ -156,6 +156,16 @@ export const ProfileScreen = ({ navigation }) => {
         )}
       </View>
 
+      <View style={styles.plansButtonContainer}>
+        <TouchableOpacity
+          style={styles.plansButton}
+          onPress={() => navigation.navigate('Plans')}
+        >
+          <Ionicons name="diamond-outline" size={20} color="#C62828" />
+          <Text style={styles.plansButtonText}>Ver Planes</Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.dangerZone}>
         <TouchableOpacity
           style={styles.logoutButton}
@@ -252,9 +262,29 @@ const styles = StyleSheet.create({
     color: '#D32F2F',
     fontWeight: '600',
   },
+  plansButtonContainer: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  plansButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FFF0F0',
+    paddingVertical: 15,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
+  },
+  plansButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#C62828',
+  },
   dangerZone: {
     paddingHorizontal: 20,
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 40,
   },
   logoutButton: {

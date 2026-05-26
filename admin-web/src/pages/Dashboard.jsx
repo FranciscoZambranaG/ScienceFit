@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import { collection, getDocs } from 'firebase/firestore'
 import {
-  LineChart, Line, BarChart, Bar,
+  AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer,
 } from 'recharts'
 import { db } from '../firebase.js'
 import StatCard from '../components/StatCard.jsx'
+import Badge from '../components/Badge.jsx'
 
 const IconUsers = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="9" cy="7" r="4" />
     <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -18,7 +19,7 @@ const IconUsers = () => (
 )
 
 const IconWorkout = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6.5 6.5h1v11h-1z" /><path d="M16.5 6.5h1v11h-1z" />
     <path d="M3 8.5h4" /><path d="M3 15.5h4" />
     <path d="M17 8.5h4" /><path d="M17 15.5h4" />
@@ -27,7 +28,7 @@ const IconWorkout = () => (
 )
 
 const IconAI = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="2" width="20" height="20" rx="4" />
     <circle cx="8" cy="10" r="2" /><circle cx="16" cy="10" r="2" />
     <path d="M8 16s1.5 2 4 2 4-2 4-2" />
@@ -35,7 +36,7 @@ const IconAI = () => (
 )
 
 const IconActive = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 )
@@ -56,11 +57,14 @@ const getLast7Days = () =>
     }
   })
 
+const AVATAR_COLORS = ['#C62828', '#1565C0', '#2E7D32', '#6A1B9A', '#E65100']
+
 const tooltipStyle = {
-  borderRadius: 8,
+  borderRadius: 10,
   border: 'none',
-  boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
   fontSize: 13,
+  fontFamily: 'Inter, system-ui, sans-serif',
 }
 
 export default function Dashboard() {
@@ -77,11 +81,9 @@ export default function Dashboard() {
       const days = getLast7Days()
       const todayStr = new Date().toISOString().split('T')[0]
 
-      // Users
       const usersSnap = await getDocs(collection(db, 'users'))
       const usersData = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }))
 
-      // Workouts — collection named 'rutinas' per spec (change to 'workouts' if needed)
       let workoutsData = []
       try {
         const wSnap = await getDocs(collection(db, 'rutinas'))
@@ -92,20 +94,17 @@ export default function Dashboard() {
         }
       } catch { /* empty */ }
 
-      // IA queries
       let iaCount = 0
       try {
         const iaSnap = await getDocs(collection(db, 'iaAnalysis'))
         iaCount = iaSnap.size
-      } catch { /* collection may not exist */ }
+      } catch { /* empty */ }
 
-      // Active today
       const activeToday = usersData.filter(u => {
         const d = parseDate(u.createdAt)
         return d && d.toISOString().split('T')[0] === todayStr
       }).length
 
-      // Charts
       const usersChartData = days.map(({ date, label }) => ({
         label,
         Usuarios: usersData.filter(u => {
@@ -122,7 +121,6 @@ export default function Dashboard() {
         }).length,
       }))
 
-      // Recent users (last 5)
       const sorted = [...usersData].sort((a, b) => {
         const da = parseDate(a.createdAt) || new Date(0)
         const db2 = parseDate(b.createdAt) || new Date(0)
@@ -140,78 +138,101 @@ export default function Dashboard() {
     }
   }
 
+  const card = {
+    background: '#fff',
+    borderRadius: 14,
+    padding: 24,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+  }
+
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 300, color: '#999' }}>
-        Cargando datos...
+      <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div className="stats-row">
+          {[1,2,3,4].map(i => (
+            <div key={i} style={{ ...card, flex: 1, minWidth: 180, display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div className="skeleton skeleton-card" style={{ width: 52, height: 52, borderRadius: 12 }} />
+              <div style={{ flex: 1 }}>
+                <div className="skeleton skeleton-text" style={{ width: '60%', marginBottom: 8 }} />
+                <div className="skeleton skeleton-text" style={{ width: '80%', height: 30 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          {[1,2].map(i => (
+            <div key={i} style={card}>
+              <div className="skeleton skeleton-text" style={{ width: '50%', marginBottom: 20 }} />
+              <div className="skeleton skeleton-card" style={{ height: 240 }} />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
 
-  const card = {
-    background: '#fff',
-    borderRadius: 12,
-    padding: 24,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      {/* Stat Cards */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <StatCard icon={<IconUsers />}   value={stats.totalUsers}    label="Total Usuarios"            accent="#4A90E2" />
-        <StatCard icon={<IconWorkout />} value={stats.totalWorkouts} label="Entrenamientos Registrados" accent="#D32F2F" />
-        <StatCard icon={<IconAI />}      value={stats.iaCount}       label="Consultas IA"               accent="#7B1FA2" />
-        <StatCard icon={<IconActive />}  value={stats.activeToday}   label="Usuarios Activos Hoy"       accent="#2E7D32" />
+      <div className="stats-row fade-in-up" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <StatCard icon={<IconUsers />}   value={stats.totalUsers}    label="Total Usuarios"            accent="#C62828" />
+        <StatCard icon={<IconWorkout />} value={stats.totalWorkouts} label="Entrenamientos"            accent="#1a1a2e" />
+        <StatCard icon={<IconAI />}      value={stats.iaCount}       label="Consultas IA"              accent="#6A1B9A" />
+        <StatCard icon={<IconActive />}  value={stats.activeToday}   label="Registros Hoy"             accent="#2E7D32" />
       </div>
 
-      {/* Charts row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="charts-grid fade-in-up-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
-        {/* Line chart */}
         <div style={card}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
             Usuarios Registrados — Últimos 7 días
           </h3>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={usersChart} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#999' }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#999' }} axisLine={false} tickLine={false} />
+            <AreaChart data={usersChart} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="gradUsers" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#C62828" stopOpacity={0.15} />
+                  <stop offset="95%" stopColor="#C62828" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0eeec" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="Usuarios"
-                stroke="#4A90E2"
+                stroke="#C62828"
                 strokeWidth={2.5}
-                dot={{ r: 4, fill: '#4A90E2', strokeWidth: 0 }}
-                activeDot={{ r: 6 }}
+                fill="url(#gradUsers)"
+                dot={{ r: 4, fill: '#C62828', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#C62828' }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Bar chart */}
         <div style={card}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 20 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
             Entrenamientos por Día — Últimos 7 días
           </h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={workoutsChart} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#999' }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#999' }} axisLine={false} tickLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0eeec" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
               <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="Rutinas" fill="#D32F2F" radius={[6, 6, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Rutinas" fill="#C62828" radius={[6, 6, 0, 0]} maxBarSize={40}
+                onMouseEnter={(data, index, event) => { if (event?.target) event.target.style.fill = '#8B0000' }}
+                onMouseLeave={(data, index, event) => { if (event?.target) event.target.style.fill = '#C62828' }}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Recent Users table */}
-      <div style={card}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 20 }}>
+      <div style={{ ...card }} className="fade-in-up-2">
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
           Últimos 5 Usuarios Registrados
         </h3>
         <div style={{ overflowX: 'auto' }}>
@@ -220,35 +241,36 @@ export default function Dashboard() {
               <tr>
                 <th>Nombre</th>
                 <th>Email</th>
-                <th>Fecha de Registro</th>
+                <th>Plan</th>
+                <th>Registro</th>
                 <th>Estado</th>
               </tr>
             </thead>
             <tbody>
               {recentUsers.length === 0 ? (
-                <tr><td colSpan={4} style={{ textAlign: 'center', color: '#999', padding: 32 }}>Sin usuarios registrados</td></tr>
-              ) : recentUsers.map(u => (
+                <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999', padding: 40 }}>Sin usuarios registrados</td></tr>
+              ) : recentUsers.map((u, idx) => (
                 <tr key={u.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
-                        width: 32, height: 32, borderRadius: '50%', background: '#4A90E2',
+                        width: 34, height: 34, borderRadius: '50%',
+                        background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
                       }}>
                         {(u.name || u.email || '?').charAt(0).toUpperCase()}
                       </div>
-                      <span>{u.name || '—'}</span>
+                      <span style={{ fontWeight: 500 }}>{u.name || '—'}</span>
                     </div>
                   </td>
-                  <td style={{ color: '#666' }}>{u.email}</td>
-                  <td style={{ color: '#666' }}>
+                  <td style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
+                  <td><Badge variant={u.plan || 'free'} /></td>
+                  <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
                     {parseDate(u.createdAt)?.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) || '—'}
                   </td>
                   <td>
-                    <span className={`badge ${u.blocked ? 'badge-blocked' : 'badge-active'}`}>
-                      {u.blocked ? 'Bloqueado' : 'Activo'}
-                    </span>
+                    <Badge variant={u.blocked ? 'blocked' : 'active'} />
                   </td>
                 </tr>
               ))}

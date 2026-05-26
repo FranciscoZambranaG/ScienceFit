@@ -1,10 +1,42 @@
-export default function StatCard({ icon, value, label, accent = '#4A90E2' }) {
+import { useEffect, useState } from 'react'
+
+function useCountUp(target, duration = 1500) {
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!target && target !== 0) return
+    if (target === 0) { setCount(0); return }
+
+    const steps = Math.max(1, Math.floor(duration / 16))
+    const increment = target / steps
+    let current = 0
+    let step = 0
+
+    const timer = setInterval(() => {
+      step++
+      current += increment
+      if (step >= steps) {
+        setCount(target)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(current))
+      }
+    }, 16)
+
+    return () => clearInterval(timer)
+  }, [target, duration])
+
+  return count
+}
+
+export default function StatCard({ icon, value, label, accent = '#C62828', trend }) {
+  const displayValue = useCountUp(typeof value === 'number' ? value : 0)
+
   return (
-    <div style={{
+    <div className="card" style={{
       background: '#fff',
-      borderRadius: 12,
-      padding: '24px 20px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+      borderRadius: 14,
+      padding: '20px 20px',
       display: 'flex',
       alignItems: 'center',
       gap: 16,
@@ -24,11 +56,30 @@ export default function StatCard({ icon, value, label, accent = '#4A90E2' }) {
       }}>
         {icon}
       </div>
-      <div>
-        <div style={{ fontSize: 28, fontWeight: 700, color: '#333', lineHeight: 1.1 }}>
-          {value ?? '—'}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 30,
+          fontWeight: 700,
+          color: 'var(--text-primary)',
+          lineHeight: 1.1,
+          letterSpacing: '-0.02em',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {typeof value === 'number' ? displayValue : (value ?? '—')}
         </div>
-        <div style={{ fontSize: 13, color: '#666', marginTop: 4 }}>{label}</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4, fontWeight: 500 }}>
+          {label}
+        </div>
+        {trend !== undefined && (
+          <div style={{
+            fontSize: 12,
+            color: trend >= 0 ? 'var(--success)' : 'var(--primary)',
+            marginTop: 4,
+            fontWeight: 600,
+          }}>
+            {trend >= 0 ? '+' : ''}{trend}% vs ayer
+          </div>
+        )}
       </div>
     </div>
   )

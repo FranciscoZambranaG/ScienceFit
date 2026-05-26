@@ -6,6 +6,8 @@ import { AuthContext } from '../context/AuthContext';
 import { AddWorkoutScreen } from '../screens/user/AddWorkoutScreen';
 import { HomeScreen } from '../screens/user/HomeScreen';
 import { IMCScreen } from '../screens/user/IMCScreen';
+import { PaymentScreen } from '../screens/user/PaymentScreen';
+import { PlansScreen } from '../screens/user/PlansScreen';
 import { ProfileScreen } from '../screens/user/ProfileScreen';
 import { ScienceIAScreen } from '../screens/user/ScienceIAScreen';
 import { SplitDetailScreen } from '../screens/user/SplitDetailScreen';
@@ -48,6 +50,8 @@ export const MainNavigator = () => {
       <Stack.Screen name="ScienceIA" component={ScienceIAScreen} />
       <Stack.Screen name="SplitDetail" component={SplitDetailScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Plans" component={PlansScreen} />
+      <Stack.Screen name="Payment" component={PaymentScreen} />
 
       {/* Coach Routes */}
       <Stack.Screen name="CoachHome" component={CoachHomeScreen} />

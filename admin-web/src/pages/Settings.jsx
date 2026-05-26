@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { signOut, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth'
 import { auth } from '../firebase.js'
 import { AuthContext } from '../App.jsx'
+import Badge from '../components/Badge.jsx'
 
 const IconUser = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -31,10 +32,19 @@ const IconLogout = () => (
 
 const card = {
   background: '#fff',
-  borderRadius: 12,
+  borderRadius: 14,
   padding: 28,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
   marginBottom: 20,
+}
+
+const infoRow = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 12,
+  padding: '14px 16px',
+  background: 'var(--cream)',
+  borderRadius: 10,
 }
 
 export default function Settings() {
@@ -91,59 +101,61 @@ export default function Settings() {
   const initial = (user?.name || user?.email || 'A').charAt(0).toUpperCase()
 
   return (
-    <div style={{ maxWidth: 640 }}>
+    <div className="page-container" style={{ maxWidth: 640 }}>
 
-      {/* Profile card */}
       <div style={card}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 20 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
           Perfil del Administrador
         </h3>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 18, marginBottom: 28 }}>
           <div style={{
-            width: 64, height: 64, borderRadius: '50%', background: '#4A90E2',
+            width: 64, height: 64, borderRadius: '50%',
+            background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#fff', fontSize: 26, fontWeight: 700,
+            boxShadow: '0 4px 12px rgba(198,40,40,0.30)',
           }}>
             {initial}
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#333' }}>{user?.name || 'Administrador'}</div>
-            <span className="badge badge-admin" style={{ marginTop: 6 }}>Admin</span>
+            <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {user?.name || 'Administrador'}
+            </div>
+            <Badge variant="admin" style={{ marginTop: 6 }} />
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: '#f8f8f8', borderRadius: 10 }}>
-            <span style={{ color: '#4A90E2' }}><IconUser /></span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={infoRow}>
+            <span style={{ color: 'var(--primary)' }}><IconUser /></span>
             <div>
-              <div style={{ fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Nombre</div>
-              <div style={{ fontSize: 14, color: '#333' }}>{user?.name || '—'}</div>
+              <div style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2, letterSpacing: '0.05em' }}>Nombre</div>
+              <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{user?.name || '—'}</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: '#f8f8f8', borderRadius: 10 }}>
-            <span style={{ color: '#4A90E2' }}><IconMail /></span>
+          <div style={infoRow}>
+            <span style={{ color: 'var(--primary)' }}><IconMail /></span>
             <div>
-              <div style={{ fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Email</div>
-              <div style={{ fontSize: 14, color: '#333' }}>{user?.email}</div>
+              <div style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2, letterSpacing: '0.05em' }}>Email</div>
+              <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{user?.email}</div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: '#f8f8f8', borderRadius: 10 }}>
-            <span style={{ color: '#4A90E2' }}><IconShield /></span>
+          <div style={infoRow}>
+            <span style={{ color: 'var(--primary)' }}><IconShield /></span>
             <div>
-              <div style={{ fontSize: 11, color: '#999', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>UID</div>
+              <div style={{ fontSize: 11, color: '#999', fontWeight: 700, textTransform: 'uppercase', marginBottom: 2, letterSpacing: '0.05em' }}>UID</div>
               <div style={{ fontSize: 12, color: '#999', fontFamily: 'monospace' }}>{user?.uid}</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Password card */}
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: showPasswordForm ? 20 : 0 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333' }}>Seguridad</h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>Seguridad</h3>
           {!showPasswordForm && (
             <button
               className="btn btn-primary"
@@ -160,9 +172,10 @@ export default function Settings() {
             borderRadius: 8,
             marginBottom: 16,
             fontSize: 13,
-            background: pwMsg.type === 'success' ? '#E8F5E9' : '#FFEBEE',
-            color: pwMsg.type === 'success' ? '#2E7D32' : '#C62828',
+            background: pwMsg.type === 'success' ? 'var(--success-light)' : 'var(--primary-light)',
+            color: pwMsg.type === 'success' ? 'var(--success)' : 'var(--primary)',
             border: `1px solid ${pwMsg.type === 'success' ? '#C8E6C9' : '#FFCDD2'}`,
+            fontWeight: 500,
           }}>
             {pwMsg.text}
           </div>
@@ -170,59 +183,32 @@ export default function Settings() {
 
         {showPasswordForm && (
           <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>
-                Contraseña actual
-              </label>
-              <input
-                className="input-field"
-                type="password"
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>
-                Nueva contraseña
-              </label>
-              <input
-                className="input-field"
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                required
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>
-                Confirmar nueva contraseña
-              </label>
-              <input
-                className="input-field"
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="Repite la nueva contraseña"
-                required
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                onClick={() => { setShowPasswordForm(false); setPwMsg(null) }}
-              >
+            {[
+              { label: 'Contraseña actual', val: currentPassword, set: setCurrentPassword, ph: '••••••••' },
+              { label: 'Nueva contraseña', val: newPassword, set: setNewPassword, ph: 'Mínimo 6 caracteres' },
+              { label: 'Confirmar nueva contraseña', val: confirmPassword, set: setConfirmPassword, ph: 'Repite la nueva contraseña' },
+            ].map(({ label, val, set, ph }) => (
+              <div key={label}>
+                <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 6 }}>
+                  {label}
+                </label>
+                <input
+                  className="input-field"
+                  type="password"
+                  value={val}
+                  onChange={e => set(e.target.value)}
+                  placeholder={ph}
+                  required
+                />
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+              <button type="button" className="btn btn-ghost"
+                onClick={() => { setShowPasswordForm(false); setPwMsg(null) }}>
                 Cancelar
               </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={pwLoading}
-                style={{ opacity: pwLoading ? 0.7 : 1 }}
-              >
+              <button type="submit" className="btn btn-primary" disabled={pwLoading}
+                style={{ opacity: pwLoading ? 0.7 : 1 }}>
                 {pwLoading ? 'Guardando...' : 'Guardar contraseña'}
               </button>
             </div>
@@ -230,17 +216,14 @@ export default function Settings() {
         )}
       </div>
 
-      {/* Logout card */}
       <div style={card}>
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#333', marginBottom: 12 }}>Sesión</h3>
-        <p style={{ fontSize: 13, color: '#999', marginBottom: 16 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12, letterSpacing: '-0.02em' }}>
+          Sesión
+        </h3>
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
           Cerrar sesión del panel de administración.
         </p>
-        <button
-          className="btn btn-danger"
-          onClick={handleLogout}
-          style={{ display: 'flex', alignItems: 'center', gap: 8 }}
-        >
+        <button className="btn btn-danger" onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <IconLogout />
           Cerrar Sesión
         </button>
