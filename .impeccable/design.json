@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-15T00:00:00Z",
+  "title": "Design System: ScienceFit Admin",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Blood Iron Red",
+        "canonical": "#C62828",
+        "tonalRamp": ["#1a0000", "#3d0000", "#7a0000", "#8B0000", "#C62828", "#E57373", "#FFCDD2", "#FFEBEE"]
+      },
+      "primary-deep": {
+        "role": "primary",
+        "displayName": "Deep Crimson",
+        "canonical": "#8B0000",
+        "tonalRamp": ["#120000", "#280000", "#440000", "#6b0000", "#8B0000", "#b71c1c", "#e57373", "#ffcdd2"]
+      },
+      "primary-faint": {
+        "role": "primary",
+        "displayName": "Faint Rose",
+        "canonical": "#FFEBEE",
+        "tonalRamp": ["#7a0000", "#c62828", "#ef9a9a", "#ffcdd2", "#ffdde0", "#ffe8ea", "#ffeff1", "#FFEBEE"]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Chalk Cream",
+        "canonical": "#FAFAF8",
+        "tonalRamp": ["#c8c6c4", "#d8d6d4", "#e4e2e0", "#eeeceb", "#f4f3f1", "#f7f6f4", "#f9f8f6", "#FAFAF8"]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Analytical White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#d0d0d0", "#e0e0e0", "#ebebeb", "#f2f2f2", "#f6f6f6", "#f9f9f9", "#fcfcfc", "#FFFFFF"]
+      },
+      "navy": {
+        "role": "primary",
+        "displayName": "Midnight Navy",
+        "canonical": "#1a1a2e",
+        "tonalRamp": ["#0a0a14", "#111122", "#1a1a2e", "#1e2440", "#2d3660", "#3d4e80", "#6478a8", "#94a3b8"]
+      },
+      "navy-dark": {
+        "role": "primary",
+        "displayName": "Abyss Navy",
+        "canonical": "#16213e",
+        "tonalRamp": ["#080e1a", "#0e1628", "#16213e", "#1c2d52", "#284070", "#3c5490", "#6070a0", "#94a3b8"]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Technical Black",
+        "canonical": "#1a1a1a",
+        "tonalRamp": ["#000000", "#0a0a0a", "#1a1a1a", "#2d2d2d", "#4a4a4a", "#6B6B6B", "#959595", "#c4c4c4"]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Data Steel",
+        "canonical": "#6B6B6B",
+        "tonalRamp": ["#1a1a1a", "#2d2d2d", "#444444", "#555555", "#6B6B6B", "#888888", "#aaaaaa", "#d0d0d0"]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Warm Divider",
+        "canonical": "#E8E4E0",
+        "tonalRamp": ["#b0aba6", "#c0bbb6", "#ccc8c4", "#d8d4d0", "#e2deda", "#E8E4E0", "#f0edea", "#f8f6f4"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Performance Green",
+        "canonical": "#2E7D32",
+        "tonalRamp": ["#0a1f0b", "#143516", "#1b4a1d", "#2E7D32", "#43a047", "#66bb6a", "#a5d6a7", "#E8F5E9"]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Alert Amber",
+        "canonical": "#F57F17",
+        "tonalRamp": ["#1a0d00", "#3d2000", "#7a4000", "#B75C00", "#F57F17", "#FFA726", "#FFCC80", "#FFF8E1"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Metric Display",
+        "purpose": "Animated numeric values in StatCard components. Tabular-nums. Numbers that must land with authority."
+      },
+      "headline": {
+        "displayName": "Brand Wordmark",
+        "purpose": "The product logotype ('SCIENCEFIT') in the sidebar only. Not a general heading style."
+      },
+      "title": {
+        "displayName": "Section Title",
+        "purpose": "Page section headings, modal titles, card group labels."
+      },
+      "body": {
+        "displayName": "Operational Body",
+        "purpose": "Table cell content, body copy, form labels. Base size 14px for data-dense layouts."
+      },
+      "label": {
+        "displayName": "Structural Label",
+        "purpose": "Table column headers, badge text. Uppercase tracked caps reserved for structural labeling only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-low",
+        "value": "0 2px 8px rgba(0,0,0,0.06)",
+        "purpose": "Default resting state for cards and containers. Separation without assertion."
+      },
+      {
+        "name": "ambient-mid",
+        "value": "0 4px 20px rgba(0,0,0,0.10)",
+        "purpose": "Hover state elevation."
+      },
+      {
+        "name": "ambient-high",
+        "value": "0 8px 32px rgba(0,0,0,0.14)",
+        "purpose": "Modal and elevated panel surfaces only."
+      },
+      {
+        "name": "primary-glow-rest",
+        "value": "0 2px 8px rgba(198,40,40,0.25)",
+        "purpose": "Primary button at rest. The only colored shadow in the system."
+      },
+      {
+        "name": "primary-glow-hover",
+        "value": "0 4px 14px rgba(198,40,40,0.35)",
+        "purpose": "Primary button on hover — expands to signal intent."
+      },
+      {
+        "name": "nav-active-glow",
+        "value": "0 4px 12px rgba(198,40,40,0.30)",
+        "purpose": "Active sidebar navigation item. Confirms selection, not decoration."
+      }
+    ],
+    "motion": [
+      {
+        "name": "easing-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default easing for all state transitions — buttons, nav items, modals, page containers."
+      },
+      {
+        "name": "duration-fast",
+        "value": "150ms",
+        "purpose": "Micro-interactions: button hover, input focus ring, table row hover."
+      },
+      {
+        "name": "duration-normal",
+        "value": "200ms–250ms",
+        "purpose": "Modal overlay, sidebar slide, nav item hover slide."
+      },
+      {
+        "name": "duration-page",
+        "value": "400ms–500ms",
+        "purpose": "Page container fadeInUp, staggered content entrances (0.1s–0.4s delays)."
+      },
+      {
+        "name": "anim-fade-in-up",
+        "value": "fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) both",
+        "purpose": "Page container and card entrance. Stagger via animation-delay (0.1s increments)."
+      },
+      {
+        "name": "anim-slide-up",
+        "value": "slideUp 0.25s cubic-bezier(0.4,0,0.2,1)",
+        "purpose": "Modal dialog entrance."
+      },
+      {
+        "name": "anim-shimmer",
+        "value": "shimmer 1.5s infinite linear",
+        "purpose": "Skeleton loading placeholder animation."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "640px", "purpose": "Stat card row stacks to column." },
+      { "name": "tablet", "value": "768px", "purpose": "Sidebar collapses off-screen, hamburger appears." },
+      { "name": "charts", "value": "900px", "purpose": "Charts grid collapses to single column." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action trigger. Red gradient fill with glow shadow. Used for create, save, confirm actions.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><line x1=\"12\" y1=\"5\" x2=\"12\" y2=\"19\"/><line x1=\"5\" y1=\"12\" x2=\"19\" y2=\"12\"/></svg> Nueva Acción</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-family: Inter, system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.01em; color: #fff; background: linear-gradient(135deg, #C62828, #8B0000); box-shadow: 0 2px 8px rgba(198,40,40,0.25); border: none; cursor: pointer; transition: all 0.15s cubic-bezier(0.4,0,0.2,1); } .ds-btn-primary:hover { box-shadow: 0 4px 14px rgba(198,40,40,0.35); filter: brightness(1.05); } .ds-btn-primary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action. Transparent at rest, cream on hover. Used for cancel, secondary CTAs.",
+      "html": "<button class=\"ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-family: Inter, system-ui, sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.01em; color: #6B6B6B; background: transparent; border: 1px solid #E8E4E0; cursor: pointer; transition: all 0.15s cubic-bezier(0.4,0,0.2,1); } .ds-btn-ghost:hover { background: #FAFAF8; color: #1a1a1a; } .ds-btn-ghost:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Semantic status indicator. Pill shape, uppercase label. Used in tables and cards to show subscription plan or user state.",
+      "html": "<div style=\"display:flex;gap:8px;flex-wrap:wrap\"><span class=\"ds-badge ds-badge-active\">Activo</span><span class=\"ds-badge ds-badge-blocked\">Bloqueado</span><span class=\"ds-badge ds-badge-pending\">Pendiente</span><span class=\"ds-badge ds-badge-max\">MAX</span><span class=\"ds-badge ds-badge-free\">FREE</span></div>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-family: Inter, system-ui, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; } .ds-badge-active { background: #E8F5E9; color: #2E7D32; } .ds-badge-blocked { background: #FFEBEE; color: #C62828; } .ds-badge-pending { background: #FFF8E1; color: #F57F17; } .ds-badge-max { background: #FFEBEE; color: #C62828; } .ds-badge-free { background: #F3F4F6; color: #555555; }"
+    },
+    {
+      "name": "Stat Card",
+      "kind": "card",
+      "refersTo": "stat-card",
+      "description": "Dashboard KPI card. Icon container with accent color, large metric value, descriptive label, optional trend indicator.",
+      "html": "<div class=\"ds-stat-card\"><div class=\"ds-stat-icon\"><svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#C62828\" stroke-width=\"2\"><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2\"/></svg></div><div class=\"ds-stat-content\"><div class=\"ds-stat-value\">1,284</div><div class=\"ds-stat-label\">Usuarios Activos</div><div class=\"ds-stat-trend ds-trend-up\">+12% vs ayer</div></div></div>",
+      "css": ".ds-stat-card { background: #FFFFFF; border-radius: 14px; padding: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-width: 180px; font-family: Inter, system-ui, sans-serif; } .ds-stat-icon { width: 52px; height: 52px; border-radius: 12px; background: rgba(198,40,40,0.09); display: flex; align-items: center; justify-content: center; flex-shrink: 0; } .ds-stat-content { flex: 1; min-width: 0; } .ds-stat-value { font-size: 30px; font-weight: 700; color: #1a1a1a; line-height: 1.1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; } .ds-stat-label { font-size: 13px; font-weight: 500; color: #6B6B6B; margin-top: 4px; } .ds-stat-trend { font-size: 12px; font-weight: 600; margin-top: 4px; } .ds-trend-up { color: #2E7D32; } .ds-trend-down { color: #C62828; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": null,
+      "description": "Standard form control. Minimal border at rest, red focus ring on activation.",
+      "html": "<div style=\"display:flex;flex-direction:column;gap:12px;max-width:320px\"><input class=\"ds-input\" type=\"text\" placeholder=\"Buscar usuario...\" /><input class=\"ds-input ds-input-focus\" type=\"text\" value=\"Francisco Admin\" /></div>",
+      "css": ".ds-input { width: 100%; padding: 10px 14px; border: 1.5px solid #E8E4E0; border-radius: 8px; background: #FFFFFF; color: #1a1a1a; font-family: Inter, system-ui, sans-serif; font-size: 14px; font-weight: 400; outline: none; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); box-sizing: border-box; } .ds-input::placeholder { color: #B0B0B0; } .ds-input:focus, .ds-input-focus { border-color: #C62828; box-shadow: 0 0 0 3px rgba(198,40,40,0.10); }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Fixed left navigation rail. Dark navy gradient shell with red active state. The structural anchor of every authenticated screen.",
+      "html": "<nav class=\"ds-sidebar\"><div class=\"ds-sidebar-logo\"><div class=\"ds-logo-text\">SCIENCEFIT</div><div class=\"ds-logo-sub\">Admin Panel</div></div><div class=\"ds-sidebar-nav\"><a class=\"ds-nav-item ds-nav-active\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"3\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/><rect x=\"14\" y=\"14\" width=\"7\" height=\"7\" rx=\"1.5\"/></svg> Dashboard</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2\"/></svg> Usuarios</a><a class=\"ds-nav-item\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M12 2L2 7l10 5 10-5-10-5z\"/><path d=\"M2 17l10 5 10-5\"/><path d=\"M2 12l10 5 10-5\"/></svg> Planes</a></div></nav>",
+      "css": ".ds-sidebar { width: 240px; background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); display: flex; flex-direction: column; font-family: Inter, system-ui, sans-serif; overflow: hidden; } .ds-sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); } .ds-logo-text { font-size: 22px; font-weight: 900; letter-spacing: 0.1em; color: #C62828; line-height: 1.1; } .ds-logo-sub { font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 0.08em; margin-top: 3px; font-weight: 500; } .ds-sidebar-nav { flex: 1; padding-top: 12px; } .ds-nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-radius: 10px; margin: 2px 12px; color: #94a3b8; font-weight: 500; font-size: 14px; text-decoration: none; transition: all 0.2s cubic-bezier(0.4,0,0.2,1); } .ds-nav-item:hover { color: #fff; transform: translateX(4px); background: rgba(198,40,40,0.15); } .ds-nav-active { background: linear-gradient(135deg, #C62828, #8B0000) !important; color: #fff !important; font-weight: 600; box-shadow: 0 4px 12px rgba(198,40,40,0.30); transform: none !important; }"
+    },
+    {
+      "name": "Data Table Row",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Tabular data display. Cream header row with uppercase labels, data rows with hover tint, semantic row states.",
+      "html": "<table class=\"ds-table\"><thead><tr><th>Usuario</th><th>Plan</th><th>Estado</th><th>Fecha</th></tr></thead><tbody><tr><td>Francisco Aliaga</td><td><span class=\"ds-badge ds-badge-max\">MAX</span></td><td><span class=\"ds-badge ds-badge-active\">Activo</span></td><td>Jun 15, 2026</td></tr><tr class=\"ds-row-warning\"><td>Ana García</td><td><span class=\"ds-badge ds-badge-free\">FREE</span></td><td><span class=\"ds-badge ds-badge-pending\">Pendiente</span></td><td>Jun 14, 2026</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: Inter, system-ui, sans-serif; background: #FFFFFF; border-radius: 14px; overflow: hidden; } .ds-table th { text-align: left; font-size: 11px; font-weight: 700; color: #6B6B6B; text-transform: uppercase; letter-spacing: 0.06em; padding: 12px 16px; border-bottom: 2px solid #E8E4E0; background: #FAFAF8; } .ds-table td { padding: 14px 16px; border-bottom: 1px solid #E8E4E0; color: #1a1a1a; font-size: 14px; transition: background 0.15s cubic-bezier(0.4,0,0.2,1); } .ds-table tr:last-child td { border-bottom: none; } .ds-table tr:hover td { background: rgba(250,250,248,0.8); } .ds-table .ds-row-warning td { background: #FFF8E1; } .ds-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; } .ds-badge-max { background: #FFEBEE; color: #C62828; } .ds-badge-free { background: #F3F4F6; color: #555555; } .ds-badge-active { background: #E8F5E9; color: #2E7D32; } .ds-badge-pending { background: #FFF8E1; color: #F57F17; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Performance Instrument",
+    "overview": "ScienceFit Admin is not a dashboard — it is an instrument. Like a Garmin sports watch or a Whoop band, it exists to give precision-hungry users direct, unmediated access to performance data. The aesthetic vocabulary comes from this analogy: a dark, authoritative navigation rail (the device casing), bright cream content surfaces (the display face), and a single red accent that functions like a status indicator light — used only where it earns its presence.\n\nThe surface is built for density without noise. Admins and coaches are in operational mode: they need to see user counts, subscription states, and workout logs at a glance — not wade through chrome or illustration. The system communicates confidence through exact spacing, sharp typographic contrast, and restraint. Nothing decorates for decoration's sake. Every visual decision can be traced to a functional reason.\n\nThis system explicitly rejects the casual warmth of consumer fitness apps (MyFitnessPal's pastel greens, gamified celebration states), the sterile coldness of clinical UI (all-white backgrounds, form-heavy layouts without hierarchy), and the forgettable genericness of standard SaaS dashboards that look identical from one product to the next. ScienceFit's interface should feel like a tool built for athletes — not a wellness app built for everyone.",
+    "keyCharacteristics": [
+      "Dark navy sidebar as structural anchor; cream page canvas as neutral content surface",
+      "Single red accent, used for primary actions, active navigation state, and critical status only",
+      "Inter at extreme weights (700, 900) for data values; Inter 400/500 for reading copy",
+      "Gently rounded corners (14px cards, 8px controls) — tactile but not playful",
+      "Shadows as ambient depth signals, not decorative texture",
+      "Skeleton loading states, not spinners; each animation serves a state transition"
+    ],
+    "rules": [
+      {
+        "name": "The One Signal Rule",
+        "body": "#C62828 marks exactly one thing at a time: the currently active nav item, the primary CTA, or a status indicator. If more than one element on a screen is red, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Navy Shell Rule",
+        "body": "The dark navy (#1a1a2e) exists only in the sidebar. Never apply it to content cards, page backgrounds, or modals. Its darkness is the contrast that makes the content surface legible.",
+        "section": "colors"
+      },
+      {
+        "name": "The Weight-as-Hierarchy Rule",
+        "body": "Do not use font size alone to establish hierarchy. In this system, a 14px/700 stat label outranks a 16px/400 body paragraph. Weight communicates authority; size communicates scope.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Uppercase Register",
+        "body": "Tracked uppercase (≥0.04em) appears only on table <th> elements, badge text, and the product logotype. Not on page headings, section titles, card headers, or button labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Shadows appear as a response to state (hover, elevation, modal), not as decoration on static content. A card at rest may use Ambient Low or no shadow at all. Never apply Ambient High to a resting, non-modal surface.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use #C62828 for exactly one prominent element per screen — the active nav item, the primary CTA, or a status indicator. Its impact depends on scarcity.",
+      "Do use Inter weight 700 or 900 for numeric data values and key metrics. Weight communicates authority; the number should land.",
+      "Do use the sidebar's dark navy (#1a1a2e) only for the navigation rail. Content backgrounds stay on the cream/white two-tone system.",
+      "Do animate state transitions with cubic-bezier(0.4,0,0.2,1) at 0.15s–0.3s. Transitions confirm interactions; they are not choreography.",
+      "Do use skeleton loading states (shimmer animation over warm grey) for deferred data.",
+      "Do respect prefers-reduced-motion — wrap fadeInUp, slideUp, and count-up animations in a media query check.",
+      "Do keep badge text uppercase at 11px with at least +0.03em tracking.",
+      "Do differentiate the Chalk Cream canvas (#FAFAF8) from the Analytical White card surface (#FFFFFF) — this tonal separation is how cards lift from the page without shadows."
+    ],
+    "donts": [
+      "Don't use casual pastel greens, gamified celebration animations, or streak-style progress indicators. The aesthetic of MyFitnessPal is the anti-reference by name.",
+      "Don't apply #1a1a2e navy to content cards, page backgrounds, or modals. Dark surfaces are the sidebar's domain.",
+      "Don't use the standard SaaS dashboard pattern without craft: identical card grids, the same sidebar+topbar+table layout copied from a UI kit with no character.",
+      "Don't use clinical/hospital UI conventions: all-white everything, form-heavy layouts with zero spatial personality, cold sans-serif type with no weight differentiation.",
+      "Don't use gradient text (background-clip: text) on any surface. Gradient fills belong on buttons and the sidebar; text must stay solid.",
+      "Don't use glassmorphism as a default card treatment. backdrop-filter: blur exists on the modal overlay only.",
+      "Don't apply large colored side-stripe borders (border-left: 4px solid #C62828) to cards as a decorative pattern.",
+      "Don't uppercase every section heading. Uppercase tracked labels belong on table <th> elements and badges only.",
+      "Don't use heavy color or full-saturation accents on inactive or rest states. #C62828 at full opacity on a resting, non-interactive element is visual noise."
+    ]
+  }
+}
