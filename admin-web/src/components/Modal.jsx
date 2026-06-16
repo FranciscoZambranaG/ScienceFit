@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 const IconClose = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 )
@@ -26,22 +26,39 @@ export default function Modal({ title, onClose, children, maxWidth = 520, footer
             alignItems: 'center',
             justifyContent: 'space-between',
             marginBottom: 20,
+            paddingBottom: 16,
+            borderBottom: '1px solid var(--border)',
           }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+            <h2 style={{
+              fontSize: 16,
+              fontWeight: 700,
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.02em',
+            }}>
               {title}
             </h2>
             <button
               onClick={onClose}
               style={{
-                background: 'none',
-                color: '#aaa',
-                padding: 4,
+                width: 28,
+                height: 28,
                 borderRadius: 6,
-                transition: 'color 0.15s',
+                background: 'transparent',
+                color: 'var(--text-tertiary)',
                 display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.12s var(--easing), color 0.12s var(--easing)',
+                flexShrink: 0,
               }}
-              onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-              onMouseLeave={e => e.currentTarget.style.color = '#aaa'}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'var(--border-light)'
+                e.currentTarget.style.color = 'var(--text-primary)'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--text-tertiary)'
+              }}
             >
               <IconClose />
             </button>
@@ -55,7 +72,7 @@ export default function Modal({ title, onClose, children, maxWidth = 520, footer
             marginTop: 20,
             display: 'flex',
             justifyContent: 'flex-end',
-            gap: 10,
+            gap: 8,
             paddingTop: 16,
             borderTop: '1px solid var(--border)',
           }}>

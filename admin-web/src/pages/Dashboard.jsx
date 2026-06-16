@@ -10,7 +10,7 @@ import StatCard from '../components/StatCard.jsx'
 import Badge from '../components/Badge.jsx'
 
 const IconUsers = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="9" cy="7" r="4" />
     <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
     <path d="M16 3.13a4 4 0 0 1 0 7.75" />
@@ -19,7 +19,7 @@ const IconUsers = () => (
 )
 
 const IconWorkout = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6.5 6.5h1v11h-1z" /><path d="M16.5 6.5h1v11h-1z" />
     <path d="M3 8.5h4" /><path d="M3 15.5h4" />
     <path d="M17 8.5h4" /><path d="M17 15.5h4" />
@@ -28,7 +28,7 @@ const IconWorkout = () => (
 )
 
 const IconAI = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="2" width="20" height="20" rx="4" />
     <circle cx="8" cy="10" r="2" /><circle cx="16" cy="10" r="2" />
     <path d="M8 16s1.5 2 4 2 4-2 4-2" />
@@ -36,7 +36,7 @@ const IconAI = () => (
 )
 
 const IconActive = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
   </svg>
 )
@@ -61,10 +61,12 @@ const AVATAR_COLORS = ['#C62828', '#1565C0', '#2E7D32', '#6A1B9A', '#E65100']
 
 const tooltipStyle = {
   borderRadius: 10,
-  border: 'none',
-  boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-  fontSize: 13,
+  border: '1px solid #E5E7EB',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+  fontSize: 12,
   fontFamily: 'Inter, system-ui, sans-serif',
+  background: '#fff',
+  padding: '8px 12px',
 }
 
 export default function Dashboard() {
@@ -138,32 +140,25 @@ export default function Dashboard() {
     }
   }
 
-  const card = {
-    background: '#fff',
-    borderRadius: 14,
-    padding: 24,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-  }
-
   if (loading) {
     return (
-      <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <div className="stats-row">
-          {[1,2,3,4].map(i => (
-            <div key={i} style={{ ...card, flex: 1, minWidth: 180, display: 'flex', gap: 16, alignItems: 'center' }}>
-              <div className="skeleton skeleton-card" style={{ width: 52, height: 52, borderRadius: 12 }} />
+      <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="stats-row" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="card-static" style={{ flex: 1, minWidth: 180, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div className="skeleton" style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <div className="skeleton skeleton-text" style={{ width: '60%', marginBottom: 8 }} />
-                <div className="skeleton skeleton-text" style={{ width: '80%', height: 30 }} />
+                <div className="skeleton" style={{ width: '50%', height: 32, marginBottom: 8, borderRadius: 6 }} />
+                <div className="skeleton skeleton-text" style={{ width: '70%' }} />
               </div>
             </div>
           ))}
         </div>
-        <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-          {[1,2].map(i => (
-            <div key={i} style={card}>
-              <div className="skeleton skeleton-text" style={{ width: '50%', marginBottom: 20 }} />
-              <div className="skeleton skeleton-card" style={{ height: 240 }} />
+        <div className="charts-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          {[1, 2].map(i => (
+            <div key={i} className="card-static" style={{ padding: 22 }}>
+              <div className="skeleton skeleton-text" style={{ width: '40%', marginBottom: 20 }} />
+              <div className="skeleton" style={{ height: 200, borderRadius: 8 }} />
             </div>
           ))}
         </div>
@@ -172,69 +167,75 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-      <div className="stats-row fade-in-up" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <StatCard icon={<IconUsers />}   value={stats.totalUsers}    label="Total Usuarios"            accent="#C62828" />
-        <StatCard icon={<IconWorkout />} value={stats.totalWorkouts} label="Entrenamientos"            accent="#1a1a2e" />
-        <StatCard icon={<IconAI />}      value={stats.iaCount}       label="Consultas IA"              accent="#6A1B9A" />
-        <StatCard icon={<IconActive />}  value={stats.activeToday}   label="Registros Hoy"             accent="#2E7D32" />
+      {/* Stat cards */}
+      <div className="stats-row page-enter" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        <StatCard icon={<IconUsers />}   value={stats.totalUsers}    label="Total usuarios"    accent="#C62828" />
+        <StatCard icon={<IconWorkout />} value={stats.totalWorkouts} label="Entrenamientos"    accent="#1a1a2e" />
+        <StatCard icon={<IconAI />}      value={stats.iaCount}       label="Consultas IA"      accent="#7c3aed" />
+        <StatCard icon={<IconActive />}  value={stats.activeToday}   label="Registros hoy"     accent="#16A34A" />
       </div>
 
-      <div className="charts-grid fade-in-up-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-
-        <div style={card}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
-            Usuarios Registrados — Últimos 7 días
-          </h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={usersChart} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
+      {/* Charts */}
+      <div className="charts-grid page-enter-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="card-static" style={{ padding: 22 }}>
+          <div style={{ marginBottom: 18 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Usuarios
+            </h3>
+            <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>Últimos 7 días</p>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={usersChart} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
               <defs>
                 <linearGradient id="gradUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#C62828" stopOpacity={0.15} />
+                  <stop offset="5%"  stopColor="#C62828" stopOpacity={0.1} />
                   <stop offset="95%" stopColor="#C62828" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0eeec" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Area
-                type="monotone"
-                dataKey="Usuarios"
-                stroke="#C62828"
-                strokeWidth={2.5}
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ stroke: '#F3F4F6', strokeWidth: 1 }} />
+              <Area type="monotone" dataKey="Usuarios" stroke="#C62828" strokeWidth={2}
                 fill="url(#gradUsers)"
-                dot={{ r: 4, fill: '#C62828', strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#C62828' }}
+                dot={{ r: 3, fill: '#C62828', strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: '#C62828', strokeWidth: 0 }}
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div style={card}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
-            Entrenamientos por Día — Últimos 7 días
-          </h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={workoutsChart} margin={{ top: 4, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0eeec" vertical={false} />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#999', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={tooltipStyle} />
-              <Bar dataKey="Rutinas" fill="#C62828" radius={[6, 6, 0, 0]} maxBarSize={40}
-                onMouseEnter={(data, index, event) => { if (event?.target) event.target.style.fill = '#8B0000' }}
-                onMouseLeave={(data, index, event) => { if (event?.target) event.target.style.fill = '#C62828' }}
-              />
+        <div className="card-static" style={{ padding: 22 }}>
+          <div style={{ marginBottom: 18 }}>
+            <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Entrenamientos
+            </h3>
+            <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>Últimos 7 días</p>
+          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={workoutsChart} margin={{ top: 4, right: 4, left: -24, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9CA3AF', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#9CA3AF', fontFamily: 'Inter' }} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={tooltipStyle} cursor={{ fill: '#F9FAFB' }} />
+              <Bar dataKey="Rutinas" fill="#C62828" radius={[5, 5, 0, 0]} maxBarSize={32} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <div style={{ ...card }} className="fade-in-up-2">
-        <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 20, letterSpacing: '-0.02em' }}>
-          Últimos 5 Usuarios Registrados
-        </h3>
+      {/* Recent users */}
+      <div className="card-static page-enter-2" style={{ overflow: 'hidden' }}>
+        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border-light)' }}>
+          <h3 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+            Últimos registros
+          </h3>
+          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+            Los 5 usuarios más recientes
+          </p>
+        </div>
         <div style={{ overflowX: 'auto' }}>
           <table>
             <thead>
@@ -248,16 +249,20 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {recentUsers.length === 0 ? (
-                <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999', padding: 40 }}>Sin usuarios registrados</td></tr>
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '40px 16px', fontSize: 13 }}>
+                    Sin usuarios registrados
+                  </td>
+                </tr>
               ) : recentUsers.map((u, idx) => (
                 <tr key={u.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{
-                        width: 34, height: 34, borderRadius: '50%',
+                        width: 32, height: 32, borderRadius: '50%',
                         background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
+                        color: '#fff', fontSize: 12, fontWeight: 700, flexShrink: 0,
                       }}>
                         {(u.name || u.email || '?').charAt(0).toUpperCase()}
                       </div>
@@ -269,15 +274,14 @@ export default function Dashboard() {
                   <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
                     {parseDate(u.createdAt)?.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) || '—'}
                   </td>
-                  <td>
-                    <Badge variant={u.blocked ? 'blocked' : 'active'} />
-                  </td>
+                  <td><Badge variant={u.blocked ? 'blocked' : 'active'} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
     </div>
   )
 }

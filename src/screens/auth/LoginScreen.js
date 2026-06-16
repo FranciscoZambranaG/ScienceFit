@@ -1,177 +1,319 @@
-import { useContext, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
-  Alert,
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Path, Svg } from 'react-native-svg';
-import { CustomButton } from '../../components/CustomButton';
-import { CustomInput } from '../../components/CustomInput';
+import Svg, { Path } from 'react-native-svg';
 import { AuthContext } from '../../context/AuthContext';
 
-const GoogleLogo = () => (
-  <Svg width="20" height="20" viewBox="0 0 24 24">
-    <Path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-    <Path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-    <Path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-    <Path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-  </Svg>
-);
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+  borderFocus: '#C62828',
+};
 
-const AppleLogo = () => (
-  <Svg width="18" height="22" viewBox="0 0 24 24">
-    <Path
-      fill="#000000"
-      d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"
-    />
-  </Svg>
-);
+function GoogleLogo() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 48 48">
+      <Path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-9 20-20 0-1.3-.1-2.7-.4-4z"/>
+      <Path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.8 18.9 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"/>
+      <Path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.5 26.8 36 24 36c-5.2 0-9.6-3-11.3-7.4l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/>
+      <Path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.6 4.6-4.8 6l6.2 5.2C40.5 36 44 30.5 44 24c0-1.3-.1-2.7-.4-4z"/>
+    </Svg>
+  );
+}
+
+function AppleLogo() {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 814 1000">
+      <Path fill="#0A0A0A" d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-57.8-155.5-127.4C46 790.7 0 663 0 541.8c0-207.5 135.4-317.3 268.5-317.3 70.1 0 128.4 46.4 172.5 46.4 42.8 0 109.6-49.1 191.4-49.1z"/>
+      <Path fill="#0A0A0A" d="M549.1 38.3c23.6-28.1 40.5-67.5 40.5-106.9 0-5.4-.5-10.8-1.5-15.8-38.4 1.5-84.1 25.3-112.3 57.3-21.8 24.5-42 63.9-42 103.9 0 6 1 12 1.5 14.1 2.5.5 6.5 1 10.5 1 34.5 0 77.3-23.1 103.3-53.6z"/>
+    </Svg>
+  );
+}
 
 export const LoginScreen = ({ navigation }) => {
+  const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useContext(AuthContext);
+  const [focusedField, setFocusedField] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
-      return;
-    }
-
+    if (!email || !password) return;
     setLoading(true);
-    const result = await login(email, password);
+    await login(email, password);
     setLoading(false);
-
-    if (!result.success) {
-      Alert.alert('Error', result.error);
-    }
   };
 
-  const handleGoogleLogin = () => {
-    Alert.alert('Info', 'Google Login - Implementar en producción');
-  };
+  const handleGoogleLogin = () => {};
+  const handleAppleLogin = () => {};
 
-  const handleAppleLogin = () => {
-    Alert.alert('Info', 'Apple Login - Implementar en producción');
-  };
+  const pressIn = () => Animated.timing(scaleBtn, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const pressOut = () => Animated.timing(scaleBtn, { toValue: 1, duration: 100, useNativeDriver: true }).start();
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.logo}>SCIENCEFIT</Text>
-      <Text style={styles.subtitle}>Iniciar Sesión</Text>
-      <Text style={styles.description}>Ingresa tus credenciales para continuar</Text>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+            <View style={styles.logoBlock}>
+              <Text style={styles.logo}>SCIENCEFIT</Text>
+              <Text style={styles.tagline}>Entrena con ciencia</Text>
+            </View>
 
-      <View style={styles.formContainer}>
-        <CustomInput
-          placeholder="email@domain.com"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
+            <View style={styles.form}>
+              <Text style={styles.formTitle}>Iniciar sesión</Text>
 
-        <CustomInput
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Correo electrónico</Text>
+                <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
+                  <Ionicons name="mail-outline" size={18} color={focusedField === 'email' ? COLORS.primary : COLORS.textTertiary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="tu@email.com"
+                    placeholderTextColor={COLORS.textTertiary}
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </View>
+              </View>
 
-        <CustomButton
-          title={loading ? "Cargando..." : "Continue"}
-          onPress={handleLogin}
-          disabled={loading}
-        />
+              <View style={styles.fieldGroup}>
+                <Text style={styles.label}>Contraseña</Text>
+                <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
+                  <Ionicons name="lock-closed-outline" size={18} color={focusedField === 'password' ? COLORS.primary : COLORS.textTertiary} style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor={COLORS.textTertiary}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeBtn}>
+                    <Ionicons name={showPassword ? 'eye-outline' : 'eye-off-outline'} size={18} color={COLORS.textTertiary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
 
-        <Text style={styles.orText}>or</Text>
+              <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+                <TouchableOpacity
+                  style={[styles.primaryBtn, (loading || !email || !password) && styles.primaryBtnDisabled]}
+                  onPress={handleLogin}
+                  onPressIn={pressIn}
+                  onPressOut={pressOut}
+                  disabled={loading || !email || !password}
+                  activeOpacity={1}
+                >
+                  <Text style={styles.primaryBtnText}>{loading ? 'Ingresando...' : 'Ingresar'}</Text>
+                </TouchableOpacity>
+              </Animated.View>
 
-        <TouchableOpacity
-          style={styles.socialButton}
-          onPress={handleGoogleLogin}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <GoogleLogo />
-            <Text style={[styles.socialButtonText, { marginLeft: 8 }]}>Continue with Google</Text>
-          </View>
-        </TouchableOpacity>
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>o continuar con</Text>
+                <View style={styles.dividerLine} />
+              </View>
 
-        <TouchableOpacity
-          style={styles.socialButton}
-          onPress={handleAppleLogin}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <AppleLogo />
-            <Text style={[styles.socialButtonText, { marginLeft: 8 }]}>Continue with Apple</Text>
-          </View>
-        </TouchableOpacity>
+              <View style={styles.socialRow}>
+                <TouchableOpacity style={styles.socialBtn} onPress={handleGoogleLogin} activeOpacity={0.7}>
+                  <GoogleLogo />
+                  <Text style={styles.socialBtnText}>Google</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.socialBtn} onPress={handleAppleLogin} activeOpacity={0.7}>
+                  <AppleLogo />
+                  <Text style={styles.socialBtnText}>Apple</Text>
+                </TouchableOpacity>
+              </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.registerText}>
-            ¿No tienes cuenta? <Text style={styles.registerLink}>Regístrate</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+              <TouchableOpacity style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
+                <Text style={styles.registerLinkText}>
+                  ¿No tienes cuenta? <Text style={styles.registerLinkAccent}>Registrarse</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 30,
+    paddingHorizontal: 24,
     paddingTop: 60,
+    paddingBottom: 40,
+  },
+  logoBlock: {
+    alignItems: 'center',
+    marginBottom: 48,
   },
   logo: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#D32F2F',
-    textAlign: 'center',
-    marginBottom: 20,
+    fontSize: 32,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 1,
   },
-  subtitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  description: {
+  tagline: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
+    color: COLORS.textSecondary,
+    marginTop: 6,
+    letterSpacing: 0.2,
   },
-  formContainer: {
-    width: '100%',
+  form: {
+    flex: 1,
   },
-  orText: {
-    textAlign: 'center',
-    marginVertical: 15,
-    color: '#999',
+  formTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 28,
+    letterSpacing: -0.3,
   },
-  socialButton: {
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 15,
-    borderRadius: 10,
+  fieldGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    letterSpacing: 0.1,
+  },
+  inputWrap: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 8,
+    height: 56,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    paddingHorizontal: 16,
   },
-  socialButtonText: {
+  inputWrapFocused: {
+    borderColor: COLORS.borderFocus,
+    backgroundColor: COLORS.background,
+  },
+  inputIcon: {
+    marginRight: 10,
+  },
+  input: {
+    flex: 1,
     fontSize: 16,
-    fontWeight: '600',
+    color: COLORS.textPrimary,
+    height: '100%',
   },
-  registerText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 14,
-    color: '#666',
+  eyeBtn: {
+    padding: 4,
+  },
+  primaryBtn: {
+    height: 56,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  primaryBtnDisabled: {
+    opacity: 0.5,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: COLORS.border,
+  },
+  dividerText: {
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    marginHorizontal: 12,
+  },
+  socialRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  socialBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 52,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+  },
+  socialBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
   },
   registerLink: {
-    color: '#D32F2F',
-    fontWeight: 'bold',
+    alignItems: 'center',
+    marginTop: 28,
+  },
+  registerLinkText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+  },
+  registerLinkAccent: {
+    color: COLORS.primary,
+    fontWeight: '600',
   },
 });

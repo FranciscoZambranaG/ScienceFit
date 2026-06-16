@@ -3,7 +3,10 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
+  Easing,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,13 +15,24 @@ import {
 import { db } from '../../../firebase.config';
 import { AuthContext } from '../../context/AuthContext';
 
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+};
+
 const PLANS = [
   {
     id: 'free',
     name: 'Plan FREE',
     price: '$0',
     period: '/mes',
-    accent: '#666',
+    accent: COLORS.textSecondary,
     features: [
       'Registro de entrenamientos',
       'Ver entrenamientos',
@@ -33,7 +47,7 @@ const PLANS = [
     name: 'Plan MAX',
     price: '$20',
     period: '/mes',
-    accent: '#C62828',
+    accent: COLORS.primary,
     badge: 'MÁS POPULAR',
     features: [
       'Todo lo del FREE',
@@ -45,10 +59,10 @@ const PLANS = [
   },
   {
     id: 'max_plicometro',
-    name: 'Plan MAX + Plicómetro',
+    name: 'MAX + Plicómetro',
     price: '$40',
     period: '/mes',
-    accent: '#1a1a2e',
+    accent: '#0A0A0A',
     badge: 'COMPLETO',
     features: [
       'Todo lo del MAX',
@@ -64,20 +78,21 @@ export const PlansScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(16)).current;
   const animations = useRef(PLANS.map(() => new Animated.Value(0))).current;
   const scaleAnims = useRef(PLANS.map(() => new Animated.Value(1))).current;
 
   useEffect(() => {
     loadCurrentPlan();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
     Animated.stagger(
-      100,
+      80,
       animations.map(anim =>
-        Animated.spring(anim, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 50,
-          friction: 8,
-        })
+        Animated.spring(anim, { toValue: 1, useNativeDriver: true, tension: 50, friction: 8 })
       )
     ).start();
   }, []);
@@ -95,14 +110,11 @@ export const PlansScreen = ({ navigation }) => {
 
   const handleSelectPlan = async (plan) => {
     if (plan.id === currentPlan) return;
-
     if (plan.id === 'free') {
       setLoading(true);
       try {
         await db.collection('users').doc(user.uid).update({
-          plan: 'free',
-          planStatus: 'active',
-          planExpiry: null,
+          plan: 'free', planStatus: 'active', planExpiry: null,
         });
         setCurrentPlan('free');
         Alert.alert('Plan actualizado', 'Ahora tienes el Plan FREE activo.');
@@ -116,159 +128,153 @@ export const PlansScreen = ({ navigation }) => {
   };
 
   const handlePressIn = (i) => {
-    Animated.spring(scaleAnims[i], {
-      toValue: 1.02,
-      useNativeDriver: true,
-      tension: 300,
-      friction: 10,
-    }).start();
+    Animated.spring(scaleAnims[i], { toValue: 1.02, useNativeDriver: true, tension: 300, friction: 10 }).start();
     setSelectedId(PLANS[i].id);
   };
 
   const handlePressOut = (i) => {
-    Animated.spring(scaleAnims[i], {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 300,
-      friction: 10,
-    }).start();
+    Animated.spring(scaleAnims[i], { toValue: 1, useNativeDriver: true, tension: 300, friction: 10 }).start();
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Planes ScienceFit</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Planes</Text>
+            <View style={{ width: 40 }} />
+          </View>
 
-      <Text style={styles.subtitle}>
-        Elige el plan que mejor se adapte a tus objetivos
-      </Text>
+          <View style={styles.introBanner}>
+            <Text style={styles.introTitle}>Elige tu plan</Text>
+            <Text style={styles.introSubtitle}>
+              Accede a herramientas científicas de entrenamiento según tu nivel de compromiso
+            </Text>
+          </View>
 
-      <View style={styles.cardsContainer}>
-        {PLANS.map((plan, i) => {
-          const translateY = animations[i].interpolate({
-            inputRange: [0, 1],
-            outputRange: [60, 0],
-          });
-          const opacity = animations[i].interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 1],
-          });
-          const isSelected = selectedId === plan.id;
-          const isCurrent = currentPlan === plan.id;
+          <View style={styles.cardsContainer}>
+            {PLANS.map((plan, i) => {
+              const translateY = animations[i].interpolate({ inputRange: [0, 1], outputRange: [40, 0] });
+              const opacity = animations[i].interpolate({ inputRange: [0, 1], outputRange: [0, 1] });
+              const isSelected = selectedId === plan.id;
+              const isCurrent = currentPlan === plan.id;
 
-          return (
-            <Animated.View
-              key={plan.id}
-              style={[
-                styles.card,
-                {
-                  transform: [{ translateY }, { scale: scaleAnims[i] }],
-                  opacity,
-                  borderColor: isSelected ? plan.accent : '#e0e0e0',
-                  shadowColor: plan.accent,
-                  shadowOpacity: isSelected ? 0.25 : 0.06,
-                  elevation: isSelected ? 8 : 3,
-                },
-              ]}
-            >
-              {plan.badge && (
-                <View style={[styles.badge, { backgroundColor: plan.accent }]}>
-                  <Text style={styles.badgeText}>{plan.badge}</Text>
-                </View>
-              )}
-
-              <Text style={[styles.planName, { color: plan.accent }]}>
-                {plan.name}
-              </Text>
-
-              <View style={styles.priceRow}>
-                <Text style={[styles.price, { color: plan.accent }]}>
-                  {plan.price}
-                </Text>
-                <Text style={styles.period}>{plan.period}</Text>
-              </View>
-
-              <View style={styles.divider} />
-
-              <View style={styles.featuresList}>
-                {plan.features.map((f, fi) => (
-                  <View key={fi} style={styles.featureItem}>
-                    <Ionicons name="checkmark-circle" size={18} color="#2E7D32" />
-                    <Text style={styles.featureText}>{f}</Text>
-                  </View>
-                ))}
-              </View>
-
-              <TouchableOpacity
-                style={[
-                  styles.selectButton,
-                  { backgroundColor: isCurrent ? '#e8e8e8' : plan.accent },
-                ]}
-                onPress={() => handleSelectPlan(plan)}
-                onPressIn={() => handlePressIn(i)}
-                onPressOut={() => handlePressOut(i)}
-                disabled={isCurrent || loading}
-                activeOpacity={0.8}
-              >
-                <Text
+              return (
+                <Animated.View
+                  key={plan.id}
                   style={[
-                    styles.selectButtonText,
-                    { color: isCurrent ? '#999' : '#fff' },
+                    styles.card,
+                    {
+                      transform: [{ translateY }, { scale: scaleAnims[i] }],
+                      opacity,
+                      borderColor: isSelected ? plan.accent : COLORS.border,
+                      shadowColor: plan.accent,
+                      shadowOpacity: isSelected ? 0.12 : 0.04,
+                    },
                   ]}
                 >
-                  {isCurrent ? 'Plan Actual' : 'Elegir Plan'}
-                </Text>
-              </TouchableOpacity>
-            </Animated.View>
-          );
-        })}
-      </View>
+                  {plan.badge && (
+                    <View style={[styles.badge, { backgroundColor: plan.accent }]}>
+                      <Text style={styles.badgeText}>{plan.badge}</Text>
+                    </View>
+                  )}
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
+                  <Text style={[styles.planName, { color: plan.accent }]}>{plan.name}</Text>
+
+                  <View style={styles.priceRow}>
+                    <Text style={[styles.price, { color: plan.accent }]}>{plan.price}</Text>
+                    <Text style={styles.period}>{plan.period}</Text>
+                  </View>
+
+                  <View style={styles.divider} />
+
+                  <View style={styles.featuresList}>
+                    {plan.features.map((f, fi) => (
+                      <View key={fi} style={styles.featureItem}>
+                        <Ionicons name="checkmark-circle" size={16} color={plan.accent === COLORS.textSecondary ? COLORS.textTertiary : plan.accent} />
+                        <Text style={styles.featureText}>{f}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.selectBtn,
+                      { backgroundColor: isCurrent ? COLORS.surface : plan.accent },
+                      isCurrent && { borderWidth: 1.5, borderColor: COLORS.border },
+                    ]}
+                    onPress={() => handleSelectPlan(plan)}
+                    onPressIn={() => handlePressIn(i)}
+                    onPressOut={() => handlePressOut(i)}
+                    disabled={isCurrent || loading}
+                    activeOpacity={0.85}
+                  >
+                    <Text style={[styles.selectBtnText, isCurrent && { color: COLORS.textTertiary }]}>
+                      {isCurrent ? 'Plan actual' : 'Elegir plan'}
+                    </Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </View>
+
+          <View style={{ height: 40 }} />
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 12,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#C62828',
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  subtitle: {
-    textAlign: 'center',
-    color: '#666',
-    fontSize: 14,
-    paddingHorizontal: 30,
-    marginBottom: 24,
+  introBanner: {
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    marginBottom: 8,
+  },
+  introTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
+    marginBottom: 6,
+  },
+  introSubtitle: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
     lineHeight: 22,
   },
   cardsContainer: {
@@ -276,74 +282,77 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
+    backgroundColor: COLORS.background,
+    borderRadius: 20,
+    padding: 22,
+    borderWidth: 1.5,
     shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 12,
+    shadowRadius: 16,
+    elevation: 3,
   },
   badge: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 20,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   badgeText: {
     color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
   },
   planName: {
     fontSize: 22,
     fontWeight: '800',
-    marginBottom: 4,
+    marginBottom: 6,
     letterSpacing: -0.3,
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   price: {
-    fontSize: 36,
+    fontSize: 38,
     fontWeight: '800',
-    letterSpacing: -1,
+    letterSpacing: -1.5,
   },
   period: {
     fontSize: 15,
-    color: '#999',
+    color: COLORS.textTertiary,
     marginLeft: 4,
   },
   divider: {
     height: 1,
-    backgroundColor: '#f0f0f0',
-    marginBottom: 16,
+    backgroundColor: COLORS.border,
+    marginBottom: 18,
   },
   featuresList: {
     gap: 10,
-    marginBottom: 20,
+    marginBottom: 22,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 10,
   },
   featureText: {
-    fontSize: 14,
-    color: '#444',
     flex: 1,
+    fontSize: 14,
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
-  selectButton: {
-    paddingVertical: 14,
-    borderRadius: 10,
+  selectBtn: {
+    height: 52,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  selectButtonText: {
-    fontSize: 16,
+  selectBtnText: {
+    fontSize: 15,
     fontWeight: '700',
+    color: '#fff',
   },
 });

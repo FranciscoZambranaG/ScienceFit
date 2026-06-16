@@ -1,33 +1,54 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { db } from '../../../firebase.config';
 import { AuthContext } from '../../context/AuthContext';
+
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+};
 
 export const CoachHomeScreen = ({ navigation }) => {
   const { user, logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [clients, setClients] = useState([]);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     loadUserData();
     loadClients();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
   }, []);
 
   const loadUserData = async () => {
     try {
       if (user) {
         const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-          setUserData(userDoc.data());
-        }
+        if (userDoc.exists) setUserData(userDoc.data());
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -52,227 +73,249 @@ export const CoachHomeScreen = ({ navigation }) => {
       '¿Estás seguro que deseas salir?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salir',
-          onPress: async () => {
-            await logout();
-          }
-        },
+        { text: 'Salir', onPress: async () => { await logout(); } },
       ]
     );
   };
 
+  const pressIn = () => Animated.timing(scaleBtn, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const pressOut = () => Animated.timing(scaleBtn, { toValue: 1, duration: 100, useNativeDriver: true }).start();
+
+  const initials = userData?.name ? userData.name.charAt(0).toUpperCase() : 'C';
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.greeting}>Coach {userData?.name || 'Usuario'} </Text>
-            <MaterialCommunityIcons name="dumbbell" size={24} color="#000" />
-          </View>
-          <Text style={styles.subGreeting}>Panel de entrenador</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Ionicons name="person-circle-outline" size={28} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.statsSection}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{clients.length}</Text>
-          <Text style={styles.statLabel}>Clientes</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>35</Text>
-          <Text style={styles.statLabel}>Entrenamientos</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>12</Text>
-          <Text style={styles.statLabel}>Esta semana</Text>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mis Clientes</Text>
-        {clients.map(client => (
-          <TouchableOpacity key={client.id} style={styles.clientCard}>
-            <View style={styles.clientAvatar}>
-              <Text style={styles.clientAvatarText}>
-                {client.name.charAt(0)}
-              </Text>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.header}>
+            <View>
+              <View style={styles.headerTitleRow}>
+                <Text style={styles.greeting}>Panel Coach</Text>
+                <MaterialCommunityIcons name="dumbbell" size={18} color={COLORS.primary} style={{ marginLeft: 6 }} />
+              </View>
+              <Text style={styles.subGreeting}>{userData?.name || 'Entrenador'}</Text>
             </View>
-            <View style={styles.clientInfo}>
-              <Text style={styles.clientName}>{client.name}</Text>
-              <Text style={styles.clientStats}>
-                {client.workouts} entrenamientos | Último: {new Date(client.lastWorkout).toLocaleDateString('es-ES')}
-              </Text>
-            </View>
-            <Text style={styles.arrowIcon}>→</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => Alert.alert('Info', 'Próximamente')}
-        >
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Ionicons name="add-circle-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.actionButtonText}>Agregar Nuevo Cliente</Text>
+            <TouchableOpacity style={styles.avatarBtn} onPress={() => navigation.navigate('Profile')}>
+              <Text style={styles.avatarText}>{initials}</Text>
+            </TouchableOpacity>
           </View>
-        </TouchableOpacity>
-      </View>
 
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>🚪 Cerrar Sesión</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <View style={styles.statsRow}>
+            {[
+              { value: clients.length, label: 'Clientes' },
+              { value: 35, label: 'Entrenamientos' },
+              { value: 12, label: 'Esta semana' },
+            ].map((stat, i) => (
+              <View key={i} style={styles.statCard}>
+                <Text style={styles.statNumber}>{stat.value}</Text>
+                <Text style={styles.statLabel}>{stat.label}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mis Clientes</Text>
+            <View style={styles.clientList}>
+              {clients.map((client) => (
+                <TouchableOpacity key={client.id} style={styles.clientCard} activeOpacity={0.7}>
+                  <View style={styles.clientAvatar}>
+                    <Text style={styles.clientAvatarText}>{client.name.charAt(0)}</Text>
+                  </View>
+                  <View style={styles.clientInfo}>
+                    <Text style={styles.clientName}>{client.name}</Text>
+                    <Text style={styles.clientStats}>
+                      {client.workouts} entrenamientos · Último: {new Date(client.lastWorkout).toLocaleDateString('es-ES')}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+              <TouchableOpacity
+                style={styles.addBtn}
+                onPress={() => Alert.alert('Info', 'Próximamente')}
+                onPressIn={pressIn}
+                onPressOut={pressOut}
+                activeOpacity={1}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                <Text style={styles.addBtnText}>Agregar Nuevo Cliente</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
+              <Ionicons name="log-out-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.logoutBtnText}>Cerrar Sesión</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 40 }} />
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#fff',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 20,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 22,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.5,
   },
   subGreeting: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+    color: COLORS.textSecondary,
+    marginTop: 3,
   },
-  profileButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+  avatarBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  profileIcon: {
-    fontSize: 24,
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
-  statsSection: {
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    paddingHorizontal: 16,
+    gap: 10,
+    marginBottom: 28,
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
-    padding: 20,
-    marginHorizontal: 5,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
   statNumber: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#D32F2F',
-    marginBottom: 5,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    letterSpacing: -1,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
-    color: '#666',
+    fontSize: 11,
+    color: COLORS.textTertiary,
+    fontWeight: '500',
     textAlign: 'center',
   },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    paddingHorizontal: 24,
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#000',
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+    marginBottom: 14,
+  },
+  clientList: {
+    gap: 10,
   },
   clientCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    gap: 12,
   },
   clientAvatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#D32F2F',
-    justifyContent: 'center',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
-    marginRight: 15,
+    justifyContent: 'center',
   },
   clientAvatarText: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
   },
   clientInfo: {
     flex: 1,
   },
   clientName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.1,
+    marginBottom: 3,
   },
   clientStats: {
     fontSize: 12,
-    color: '#666',
+    color: COLORS.textTertiary,
   },
-  arrowIcon: {
-    fontSize: 24,
-    color: '#999',
-  },
-  actionButton: {
-    backgroundColor: '#4CAF50',
-    paddingVertical: 15,
-    borderRadius: 10,
+  addBtn: {
+    height: 56,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
   },
-  actionButtonText: {
+  addBtnText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#fff',
+    letterSpacing: 0.2,
   },
-  logoutButton: {
-    backgroundColor: '#FFF0F0',
-    paddingVertical: 15,
-    borderRadius: 10,
+  logoutBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FFD0D0',
+    justifyContent: 'center',
+    height: 52,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    gap: 8,
+    borderWidth: 1.5,
+    borderColor: '#FFCDD2',
   },
-  logoutButtonText: {
-    fontSize: 16,
-    color: '#D32F2F',
-    fontWeight: 'bold',
+  logoutBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.primary,
   },
 });

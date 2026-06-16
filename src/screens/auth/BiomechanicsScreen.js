@@ -1,357 +1,378 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
   Image,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { db } from '../../../firebase.config';
-import { CustomButton } from '../../components/CustomButton';
 import { AuthContext } from '../../context/AuthContext';
+
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+  borderFocus: '#C62828',
+};
 
 export const BiomechanicsScreen = ({ navigation, route }) => {
   const { user } = useContext(AuthContext);
-  const { userLevel = 'principiante' } = route.params || {};
+  const { userLevel } = route.params;
   const [image, setImage] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  console.log('BiomechanicsScreen - Nivel recibido:', userLevel);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const requestPermission = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Permiso necesario',
-        'Necesitamos acceso a la cámara para analizar tu biomecánica'
-      );
-      return false;
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  useEffect(() => {
+    if (analyzing) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.04, duration: 600, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
     }
-    return true;
-  };
+  }, [analyzing]);
 
   const takePhoto = async () => {
-    const hasPermission = await requestPermission();
-    if (!hasPermission) return;
-
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error al tomar foto:', error);
-      Alert.alert('Error', 'No se pudo acceder a la cámara');
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a la cámara');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
   const pickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [3, 4],
-        quality: 0.8,
-      });
-
-      if (!result.canceled) {
-        setImage(result.assets[0].uri);
-      }
-    } catch (error) {
-      console.error('Error al seleccionar imagen:', error);
-      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
   const analyzeImage = async () => {
-    if (!image) {
-      Alert.alert('Error', 'Por favor toma o selecciona una foto primero');
-      return;
-    }
-
     setAnalyzing(true);
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
       let biomechanicsType;
-
-      console.log('Analizando con nivel de usuario:', userLevel);
-
       if (userLevel === 'principiante') {
         biomechanicsType = Math.random() > 0.5 ? 'type_fullbody' : 'type_upper_lower';
-      } else if (userLevel === 'intermedio') {
-        const options = ['type_upper_lower', 'type_ppl', 'type_fullbody'];
-        biomechanicsType = options[Math.floor(Math.random() * options.length)];
       } else {
         biomechanicsType = Math.random() > 0.5 ? 'type_ppl' : 'type_arnold';
       }
-
-      console.log('Tipo biomecánico determinado:', biomechanicsType);
-
-      await db.collection('users').doc(user.uid).set({
-        biomechanicsType: biomechanicsType,
-        biomechanicsAnalyzed: true,
-        level: userLevel,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true });
-
-      console.log('Datos guardados en Firebase');
-
-      setAnalyzing(false);
-
-      navigation.navigate('Recommendations', {
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      await db.collection('users').doc(user.uid).update({
         biomechanicsType,
-        userLevel
+        biomechanicsAnalyzed: true,
       });
+      navigation.navigate('Recommendations', { biomechanicsType, userLevel });
     } catch (error) {
-      console.error('Error en análisis:', error);
-      setAnalyzing(false);
-
-      Alert.alert(
-        'Error',
-        'No se pudo completar el análisis. Intenta nuevamente.',
-        [
-          {
-            text: 'Reintentar',
-            onPress: () => analyzeImage()
-          },
-          {
-            text: 'Continuar sin análisis',
-            onPress: () => {
-              const defaultType = userLevel === 'principiante' ? 'type_fullbody' : 'type_upper_lower';
-              navigation.navigate('Recommendations', {
-                biomechanicsType: defaultType,
-                userLevel
-              });
-            }
-          }
-        ]
-      );
+      Alert.alert('Error', 'No se pudo analizar la imagen');
+      console.error(error);
     }
+    setAnalyzing(false);
   };
 
+  const pressIn = () => Animated.timing(scaleBtn, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const pressOut = () => Animated.timing(scaleBtn, { toValue: 1, duration: 100, useNativeDriver: true }).start();
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '66%' }]} />
-        </View>
-        <Text style={styles.progressText}>Paso 2 de 3</Text>
-      </View>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <Text style={styles.logo}>SCIENCEFIT</Text>
 
-      <Text style={styles.logo}>SCIENCEFIT</Text>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-        <Ionicons name="camera-outline" size={24} color="#000" style={{ marginRight: 8 }} />
-        <Text style={[styles.title, { marginBottom: 0 }]}>Análisis Biomecánico</Text>
-      </View>
-
-      <Text style={styles.description}>
-        Toma una foto de cuerpo completo para analizar tu biomecánica
-      </Text>
-
-      <View style={styles.instructionsContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-          <Ionicons name="clipboard-outline" size={16} color="#000" style={{ marginRight: 6 }} />
-          <Text style={[styles.instructionsTitle, { marginBottom: 0 }]}>Instrucciones:</Text>
-        </View>
-        <Text style={styles.instruction}>• Párate de frente a la cámara</Text>
-        <Text style={styles.instruction}>• Asegúrate de tener buena iluminación</Text>
-        <Text style={styles.instruction}>• Muestra tu cuerpo completo</Text>
-        <Text style={styles.instruction}>• Mantén una postura natural</Text>
-      </View>
-
-      {image ? (
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: image }} style={styles.image} />
-          <TouchableOpacity
-            style={styles.retakeButton}
-            onPress={() => setImage(null)}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="refresh-outline" size={14} color="#333" style={{ marginRight: 6 }} />
-              <Text style={styles.retakeButtonText}>Tomar otra foto</Text>
+          <View style={styles.progressSection}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: '66%' }]} />
             </View>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={styles.photoButtonsContainer}>
-          <TouchableOpacity
-            style={styles.photoButton}
-            onPress={takePhoto}
-          >
-            <Text style={styles.photoButtonEmoji}>📷</Text>
-            <Text style={styles.photoButtonText}>Tomar Foto</Text>
-          </TouchableOpacity>
+            <Text style={styles.progressLabel}>Paso 2 de 3 — Análisis biomecánico</Text>
+          </View>
 
-          <TouchableOpacity
-            style={styles.photoButton}
-            onPress={pickImage}
-          >
-            <Text style={styles.photoButtonEmoji}>🖼️</Text>
-            <Text style={styles.photoButtonText}>Seleccionar de Galería</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <CustomButton
-        title={analyzing ? "Analizando..." : "Analizar Biomecánica"}
-        onPress={analyzeImage}
-        disabled={!image || analyzing}
-      />
-
-      {analyzing && (
-        <View style={styles.analyzingContainer}>
-          <Text style={styles.analyzingText}>
-            Analizando tu postura y biomecánica...
+          <Text style={styles.title}>Análisis corporal</Text>
+          <Text style={styles.subtitle}>
+            Sube una foto de cuerpo completo de frente para analizar tu biomecánica y personalizar tu plan
           </Text>
-          <Text style={styles.analyzingSubtext}>
-            Esto puede tomar unos segundos ⏳
-          </Text>
-        </View>
-      )}
-    </ScrollView>
+
+          {image ? (
+            <View style={styles.imagePreviewCard}>
+              <Image source={{ uri: image }} style={styles.previewImage} resizeMode="cover" />
+              <TouchableOpacity style={styles.changeImageBtn} onPress={() => setImage(null)}>
+                <Ionicons name="refresh-outline" size={16} color={COLORS.textSecondary} />
+                <Text style={styles.changeImageText}>Cambiar foto</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.uploadZone}>
+              <View style={styles.uploadIconWrap}>
+                <Ionicons name="person-outline" size={36} color={COLORS.textTertiary} />
+              </View>
+              <Text style={styles.uploadTitle}>Subir foto de cuerpo completo</Text>
+              <Text style={styles.uploadHint}>Foto de frente, buena iluminación</Text>
+
+              <View style={styles.uploadActions}>
+                <TouchableOpacity style={styles.uploadBtn} onPress={takePhoto} activeOpacity={0.7}>
+                  <Ionicons name="camera-outline" size={20} color={COLORS.primary} />
+                  <Text style={styles.uploadBtnText}>Cámara</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.uploadBtn} onPress={pickImage} activeOpacity={0.7}>
+                  <Ionicons name="images-outline" size={20} color={COLORS.primary} />
+                  <Text style={styles.uploadBtnText}>Galería</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {analyzing && (
+            <Animated.View style={[styles.analyzingCard, { transform: [{ scale: pulseAnim }] }]}>
+              <Ionicons name="scan-outline" size={22} color={COLORS.primary} />
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={styles.analyzingTitle}>Analizando biomecánica...</Text>
+                <Text style={styles.analyzingSubtitle}>Evaluando estructura, postura y proporciones</Text>
+              </View>
+            </Animated.View>
+          )}
+
+          {image && !analyzing && (
+            <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+              <TouchableOpacity
+                style={styles.primaryBtn}
+                onPress={analyzeImage}
+                onPressIn={pressIn}
+                onPressOut={pressOut}
+                activeOpacity={1}
+              >
+                <Ionicons name="scan-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.primaryBtnText}>Analizar con IA</Text>
+              </TouchableOpacity>
+            </Animated.View>
+          )}
+
+          <View style={styles.infoCard}>
+            <Ionicons name="shield-checkmark-outline" size={18} color={COLORS.textTertiary} />
+            <Text style={styles.infoText}>
+              Tu foto se analiza localmente y no se almacena en nuestros servidores
+            </Text>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 30,
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
-  progressContainer: {
-    marginBottom: 30,
+  logo: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 28,
+  },
+  progressSection: {
+    marginBottom: 32,
   },
   progressBar: {
-    height: 4,
-    backgroundColor: '#f0f0f0',
+    height: 3,
+    backgroundColor: COLORS.border,
     borderRadius: 2,
     overflow: 'hidden',
+    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#D32F2F',
+    backgroundColor: COLORS.primary,
+    borderRadius: 2,
   },
-  progressText: {
+  progressLabel: {
     fontSize: 12,
-    color: '#666',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  logo: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#D32F2F',
-    textAlign: 'center',
-    marginBottom: 20,
+    color: COLORS.textTertiary,
+    fontWeight: '500',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 10,
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
+    marginBottom: 8,
   },
-  description: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
+  subtitle: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+    marginBottom: 28,
   },
-  instructionsContainer: {
-    backgroundColor: '#F5F5F5',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  instructionsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  instruction: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  photoButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-  photoButton: {
-    flex: 1,
-    paddingVertical: 30,
-    borderRadius: 12,
-    backgroundColor: '#f0f0f0',
-    marginHorizontal: 5,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
+  uploadZone: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
     borderStyle: 'dashed',
-  },
-  photoButtonEmoji: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
-  photoButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-  },
-  imageContainer: {
+    padding: 32,
     alignItems: 'center',
     marginBottom: 20,
   },
-  image: {
-    width: 250,
-    height: 350,
-    borderRadius: 12,
-    backgroundColor: '#f0f0f0',
-  },
-  retakeButton: {
-    marginTop: 15,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-  },
-  retakeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-  },
-  analyzingContainer: {
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: '#FFF8F0',
-    borderRadius: 10,
+  uploadIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: COLORS.background,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
-  analyzingText: {
+  uploadTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#D32F2F',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
     textAlign: 'center',
-    marginBottom: 5,
   },
-  analyzingSubtext: {
-    fontSize: 14,
-    color: '#666',
+  uploadHint: {
+    fontSize: 13,
+    color: COLORS.textTertiary,
     textAlign: 'center',
+    marginBottom: 24,
+  },
+  uploadActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  uploadBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+  },
+  uploadBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  imagePreviewCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: 20,
+    backgroundColor: COLORS.surface,
+  },
+  previewImage: {
+    width: '100%',
+    height: 280,
+  },
+  changeImageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+  },
+  changeImageText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  analyzingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  analyzingTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+    marginBottom: 3,
+  },
+  analyzingSubtitle: {
+    fontSize: 12,
+    color: COLORS.primary,
+    opacity: 0.7,
+  },
+  primaryBtn: {
+    height: 56,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 14,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    lineHeight: 18,
   },
 });

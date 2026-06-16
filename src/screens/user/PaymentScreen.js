@@ -1,8 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,6 +15,19 @@ import {
 import Svg, { Rect } from 'react-native-svg';
 import firebase, { db } from '../../../firebase.config';
 import { AuthContext } from '../../context/AuthContext';
+
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+  warning: '#F59E0B',
+  warningLight: '#FFFBEB',
+};
 
 const QR_PATTERN = [
   [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1],
@@ -36,7 +53,7 @@ const QR_PATTERN = [
   [1,1,1,1,1,1,1,0,1,0,0,1,0,0,0,1,1,0,1,0,1],
 ];
 
-const CELL = 11;
+const CELL = 10;
 const QR_SIZE = 21 * CELL;
 
 function FakeQR() {
@@ -45,15 +62,7 @@ function FakeQR() {
       {QR_PATTERN.map((row, ri) =>
         row.map((cell, ci) =>
           cell ? (
-            <Rect
-              key={`${ri}-${ci}`}
-              x={ci * CELL}
-              y={ri * CELL}
-              width={CELL - 1}
-              height={CELL - 1}
-              fill="#1a1a2e"
-              rx={1.5}
-            />
+            <Rect key={`${ri}-${ci}`} x={ci * CELL} y={ri * CELL} width={CELL - 1} height={CELL - 1} fill={COLORS.textPrimary} rx={1} />
           ) : null
         )
       )}
@@ -67,34 +76,35 @@ export const PaymentScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [paid, setPaid] = useState(false);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(16)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, []);
+
   const amount = plan.id === 'max' ? 20 : 40;
 
   const handlePaymentDone = async () => {
     setLoading(true);
     try {
       const now = firebase.firestore.Timestamp.now();
-
       await db.collection('users').doc(user.uid).update({
-        plan: plan.id,
-        planStatus: 'pending',
-        planExpiry: null,
-        paymentDate: now,
-        paymentAmount: amount,
+        plan: plan.id, planStatus: 'pending', planExpiry: null,
+        paymentDate: now, paymentAmount: amount,
       });
-
       const userDoc = await db.collection('users').doc(user.uid).get();
       const userData = userDoc.data();
-
       await db.collection('payments').add({
         userId: user.uid,
         userName: userData?.name || '',
         userEmail: userData?.email || user.email || '',
-        plan: plan.id,
-        amount,
-        status: 'pending',
-        createdAt: now,
+        plan: plan.id, amount, status: 'pending', createdAt: now,
       });
-
       setPaid(true);
     } catch (err) {
       console.error('Payment error:', err);
@@ -103,228 +113,289 @@ export const PaymentScreen = ({ navigation, route }) => {
     setLoading(false);
   };
 
+  const pressIn = () => Animated.timing(scaleBtn, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const pressOut = () => Animated.timing(scaleBtn, { toValue: 1, duration: 100, useNativeDriver: true }).start();
+
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pago</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.planInfo}>
-        <Text style={styles.planInfoName}>{plan.name}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'baseline' }}>
-          <Text style={styles.planInfoPrice}>{plan.price}</Text>
-          <Text style={styles.planInfoPeriod}>{plan.period}</Text>
-        </View>
-      </View>
-
-      {paid ? (
-        <View style={styles.successContainer}>
-          <View style={styles.successIcon}>
-            <Ionicons name="time-outline" size={52} color="#F57F17" />
-          </View>
-          <Text style={styles.successTitle}>Pago en Verificación</Text>
-          <Text style={styles.successText}>
-            Tu pago está siendo verificado. Te notificaremos cuando se confirme.
-          </Text>
-          <TouchableOpacity
-            style={styles.homeButton}
-            onPress={() => navigation.navigate('Home')}
-          >
-            <Text style={styles.homeButtonText}>Volver al Inicio</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <>
-          <View style={styles.qrSection}>
-            <Text style={styles.qrTitle}>Escanea este QR para pagar</Text>
-            <View style={styles.qrContainer}>
-              <FakeQR />
-            </View>
-            <View style={styles.instructionsBox}>
-              <Text style={styles.instructionsTitle}>Instrucciones</Text>
-              <Text style={styles.instructionsText}>
-                1. Abre tu app de pagos{'\n'}
-                2. Escanea el código QR{'\n'}
-                3. Confirma el monto de {plan.price}/mes{'\n'}
-                4. Presiona el botón de confirmación abajo
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.payButton, loading && { opacity: 0.7 }]}
-              onPress={handlePaymentDone}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="checkmark-circle" size={22} color="#fff" />
-              <Text style={styles.payButtonText}>
-                {loading ? 'Procesando...' : 'Pago Realizado'}
-              </Text>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
             </TouchableOpacity>
+            <Text style={styles.headerTitle}>Pago</Text>
+            <View style={{ width: 40 }} />
           </View>
-        </>
-      )}
-    </ScrollView>
+
+          <View style={styles.planSummary}>
+            <Text style={styles.planSummaryName}>{plan.name}</Text>
+            <View style={styles.planSummaryPrice}>
+              <Text style={styles.planSummaryAmount}>{plan.price}</Text>
+              <Text style={styles.planSummaryPeriod}>{plan.period}</Text>
+            </View>
+          </View>
+
+          {paid ? (
+            <View style={styles.successContainer}>
+              <View style={styles.successIconWrap}>
+                <Ionicons name="time-outline" size={44} color={COLORS.warning} />
+              </View>
+              <Text style={styles.successTitle}>Pago en verificación</Text>
+              <Text style={styles.successSubtitle}>
+                Tu pago está siendo verificado. Te notificaremos cuando se confirme.
+              </Text>
+              <TouchableOpacity
+                style={styles.homeBtn}
+                onPress={() => navigation.navigate('Home')}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.homeBtnText}>Volver al inicio</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <View style={styles.qrSection}>
+                <Text style={styles.qrTitle}>Escanea para pagar</Text>
+                <View style={styles.qrCard}>
+                  <FakeQR />
+                </View>
+                <View style={styles.instructionsCard}>
+                  <Text style={styles.instructionsTitle}>INSTRUCCIONES</Text>
+                  <View style={styles.instructionsList}>
+                    {[
+                      'Abre tu app de pagos',
+                      'Escanea el código QR',
+                      `Confirma el monto de ${plan.price}/mes`,
+                      'Presiona el botón de confirmación abajo',
+                    ].map((step, i) => (
+                      <View key={i} style={styles.instructionRow}>
+                        <View style={styles.instructionNum}>
+                          <Text style={styles.instructionNumText}>{i + 1}</Text>
+                        </View>
+                        <Text style={styles.instructionText}>{step}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.footer}>
+                <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+                  <TouchableOpacity
+                    style={[styles.payBtn, loading && styles.payBtnDisabled]}
+                    onPress={handlePaymentDone}
+                    onPressIn={pressIn}
+                    onPressOut={pressOut}
+                    disabled={loading}
+                    activeOpacity={1}
+                  >
+                    <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                    <Text style={styles.payBtnText}>{loading ? 'Procesando...' : 'Ya realicé el pago'}</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              </View>
+            </>
+          )}
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flexGrow: 1,
+    paddingBottom: 40,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 16,
     paddingBottom: 12,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  planInfo: {
-    alignItems: 'center',
-    paddingVertical: 24,
-    marginHorizontal: 20,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 16,
-    marginBottom: 24,
-    gap: 4,
-  },
-  planInfoName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#333',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  planInfoPrice: {
-    fontSize: 36,
+  planSummary: {
+    marginHorizontal: 24,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    marginBottom: 28,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+  },
+  planSummaryName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    marginBottom: 8,
+    letterSpacing: -0.1,
+  },
+  planSummaryPrice: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  planSummaryAmount: {
+    fontSize: 40,
     fontWeight: '800',
-    color: '#C62828',
-    letterSpacing: -1,
+    color: COLORS.primary,
+    letterSpacing: -2,
   },
-  planInfoPeriod: {
+  planSummaryPeriod: {
     fontSize: 16,
-    color: '#999',
+    color: COLORS.textTertiary,
     marginLeft: 4,
   },
   qrSection: {
+    paddingHorizontal: 24,
     alignItems: 'center',
-    paddingHorizontal: 20,
   },
   qrTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    color: '#333',
+    color: COLORS.textPrimary,
     marginBottom: 20,
-    textAlign: 'center',
+    letterSpacing: -0.2,
   },
-  qrContainer: {
+  qrCard: {
     padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: COLORS.background,
+    borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
     marginBottom: 24,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  instructionsBox: {
-    backgroundColor: '#f8f8f8',
-    padding: 16,
-    borderRadius: 12,
+  instructionsCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 18,
     width: '100%',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
   instructionsTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    fontWeight: '800',
+    color: COLORS.textTertiary,
+    letterSpacing: 1.2,
+    marginBottom: 14,
   },
-  instructionsText: {
+  instructionsList: {
+    gap: 12,
+  },
+  instructionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  instructionNum: {
+    width: 24,
+    height: 24,
+    borderRadius: 8,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  instructionNumText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#fff',
+  },
+  instructionText: {
+    flex: 1,
     fontSize: 14,
-    color: '#666',
-    lineHeight: 26,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
   },
   footer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingTop: 24,
-    paddingBottom: 40,
   },
-  payButton: {
+  payBtn: {
+    height: 56,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#2E7D32',
-    paddingVertical: 16,
-    borderRadius: 12,
   },
-  payButtonText: {
-    fontSize: 18,
+  payBtnDisabled: {
+    opacity: 0.6,
+  },
+  payBtnText: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#fff',
+    letterSpacing: 0.2,
   },
   successContainer: {
     alignItems: 'center',
-    paddingHorizontal: 30,
-    paddingVertical: 40,
+    paddingHorizontal: 32,
+    paddingTop: 20,
   },
-  successIcon: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#FFF8E1',
-    justifyContent: 'center',
+  successIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    backgroundColor: COLORS.warningLight,
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 24,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
   },
   successTitle: {
     fontSize: 24,
-    fontWeight: '800',
-    color: '#333',
-    marginBottom: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 10,
     textAlign: 'center',
-    letterSpacing: -0.5,
+    letterSpacing: -0.3,
   },
-  successText: {
+  successSubtitle: {
     fontSize: 15,
-    color: '#666',
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
     marginBottom: 32,
   },
-  homeButton: {
-    backgroundColor: '#C62828',
-    paddingVertical: 14,
+  homeBtn: {
+    height: 52,
+    backgroundColor: COLORS.primary,
     paddingHorizontal: 32,
-    borderRadius: 10,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  homeButtonText: {
-    fontSize: 16,
+  homeBtnText: {
+    fontSize: 15,
     fontWeight: '700',
     color: '#fff',
   },

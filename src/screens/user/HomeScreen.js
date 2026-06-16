@@ -1,18 +1,33 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
   Modal,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { db } from '../../../firebase.config';
 import { AuthContext } from '../../context/AuthContext';
 
-// Información detallada de cada split
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  surfaceElevated: '#FFFFFF',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+};
+
 const SPLIT_INFO = {
   'upper-lower': {
     name: 'Up/LW',
@@ -48,14 +63,27 @@ const SPLIT_INFO = {
   }
 };
 
+const STUDIES = [
+  { author: 'Jeff Nippard', date: 'Hoy', title: 'El mejor split para hipertrofia' },
+  { author: 'Ramon Dino', date: 'Ayer', title: 'Eficiencia del RIR' },
+  { author: 'Mike Israetel', date: '2d', title: 'Volumen óptimo' },
+];
+
 export const HomeScreen = ({ navigation }) => {
   const { user, logout } = useContext(AuthContext);
   const [userData, setUserData] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedSplit, setSelectedSplit] = useState(null);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(16)).current;
+
   useEffect(() => {
     loadUserData();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
   }, []);
 
   const loadUserData = async () => {
@@ -81,12 +109,7 @@ export const HomeScreen = ({ navigation }) => {
       '¿Estás seguro que deseas salir?',
       [
         { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Salir',
-          onPress: async () => {
-            await logout();
-          }
-        },
+        { text: 'Salir', onPress: async () => { await logout(); } },
       ]
     );
   };
@@ -100,457 +123,437 @@ export const HomeScreen = ({ navigation }) => {
     navigation.navigate('SplitDetail', { splitType });
   };
 
-  return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.greeting}>Hola, {userData?.name || 'Usuario'}</Text>
-          <Text style={styles.subGreeting}>¡Es hora de entrenar!</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={() => navigation.navigate('Profile')}
-        >
-          <Ionicons name="person-circle-outline" size={28} color="#333" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Sección de Entrenamiento */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Entrenamiento</Text>
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('AddWorkout')}
-          >
-            <Ionicons name="add-circle-outline" size={30} color="#333" style={{ marginBottom: 10 }} />
-            <Text style={styles.buttonText}>Agregar{'\n'}Entrenamiento</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('ViewWorkouts')}
-          >
-            <Ionicons name="bar-chart-outline" size={30} color="#333" style={{ marginBottom: 10 }} />
-            <Text style={styles.buttonText}>Ver{'\n'}Entrenamientos</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('IMC')}
-          >
-            <Text style={styles.buttonIcon}>📏</Text>
-            <Text style={styles.buttonText}>Medición{'\n'}IMC</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Botón ScienceIA */}
+  const QuickAction = ({ icon, label, onPress, isIonicon = true }) => {
+    const scale = useRef(new Animated.Value(1)).current;
+    return (
       <TouchableOpacity
-        style={styles.scienceIAButton}
-        onPress={() => navigation.navigate('ScienceIA')}
+        style={styles.quickAction}
+        onPress={onPress}
+        onPressIn={() => Animated.timing(scale, { toValue: 0.95, duration: 100, useNativeDriver: true }).start()}
+        onPressOut={() => Animated.timing(scale, { toValue: 1, duration: 100, useNativeDriver: true }).start()}
+        activeOpacity={1}
       >
-        <MaterialCommunityIcons name="robot-outline" size={40} color="#fff" style={{ marginRight: 15 }} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.scienceIATitle}>ScienceIA</Text>
-          <Text style={styles.scienceIASubtitle}>Análisis de técnica con IA</Text>
-        </View>
-        <Text style={styles.arrowIcon}>→</Text>
+        <Animated.View style={[styles.quickActionInner, { transform: [{ scale }] }]}>
+          <View style={styles.quickActionIcon}>
+            {isIonicon
+              ? <Ionicons name={icon} size={22} color={COLORS.primary} />
+              : <MaterialCommunityIcons name={icon} size={22} color={COLORS.primary} />
+            }
+          </View>
+          <Text style={styles.quickActionLabel}>{label}</Text>
+        </Animated.View>
       </TouchableOpacity>
+    );
+  };
 
-      {/* Rutinas Semanales */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Rutinas Semanales</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {Object.keys(SPLIT_INFO).map((splitType) => {
-            const split = SPLIT_INFO[splitType];
-            return (
-              <View key={splitType} style={styles.splitCardWrapper}>
-                <TouchableOpacity
-                  style={styles.splitCard}
-                  onPress={() => navigateToSplit(splitType)}
-                >
-                  <MaterialCommunityIcons name={split.icon} size={40} color="#333" style={{ marginBottom: 10 }} />
-                  <Text style={styles.splitName}>{split.name}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.infoButton}
-                  onPress={() => showSplitInfo(splitType)}
-                >
-                  <Ionicons name="information-circle" size={22} color="#fff" />
-                </TouchableOpacity>
-              </View>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Estudios Científicos */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Estudios Científicos</Text>
-        <View style={styles.studiesContainer}>
-          <View style={styles.studyCard}>
-            <View style={styles.studyHeader}>
-              <Text style={styles.studyAuthor}>Jeff Nipard</Text>
-              <Text style={styles.studyDate}>Hoy</Text>
+  return (
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Hola, {userData?.name?.split(' ')[0] || 'Usuario'}</Text>
+              <Text style={styles.subGreeting}>Es hora de entrenar</Text>
             </View>
-            <Text style={styles.studyTitle}>El mejor split para hipertrofia</Text>
-            <View style={styles.studyImage}>
-              <Text style={styles.studyImagePlaceholder}>📄</Text>
-            </View>
-          </View>
-
-          <View style={styles.studyCard}>
-            <View style={styles.studyHeader}>
-              <Text style={styles.studyAuthor}>Ramon Dino</Text>
-              <Text style={styles.studyDate}>Ayer</Text>
-            </View>
-            <Text style={styles.studyTitle}>Eficiencia del RIR</Text>
-            <View style={styles.studyImage}>
-              <Text style={styles.studyImagePlaceholder}>📄</Text>
-            </View>
-          </View>
-
-          <View style={styles.studyCard}>
-            <View style={styles.studyHeader}>
-              <Text style={styles.studyAuthor}>Mike Israetel</Text>
-              <Text style={styles.studyDate}>2d</Text>
-            </View>
-            <Text style={styles.studyTitle}>Volumen óptimo</Text>
-            <View style={styles.studyImage}>
-              <Text style={styles.studyImagePlaceholder}>📄</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>🚪 Cerrar Sesión</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Espacio adicional al final */}
-      <View style={{ height: 40 }} />
-
-      {/* Modal de información del split */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              {selectedSplit && (
-                <MaterialCommunityIcons name={selectedSplit.icon} size={50} color="#4A90E2" style={{ marginBottom: 10 }} />
-              )}
-              <Text style={styles.modalTitle}>{selectedSplit?.fullNameSpanish}</Text>
-              <Text style={styles.modalSubtitle}>({selectedSplit?.fullName})</Text>
-            </View>
-
-            <View style={styles.modalFrequency}>
-              <Text style={styles.frequencyLabel}>Frecuencia semanal:</Text>
-              <Text style={styles.frequencyValue}>{selectedSplit?.daysPerWeek} días</Text>
-            </View>
-
-            <Text style={styles.modalDescription}>
-              {selectedSplit?.description}
-            </Text>
-
             <TouchableOpacity
-              style={styles.modalButton}
-              onPress={() => setModalVisible(false)}
+              style={styles.avatarBtn}
+              onPress={() => navigation.navigate('Profile')}
             >
-              <Text style={styles.modalButtonText}>Entendido</Text>
+              <Ionicons name="person-outline" size={20} color={COLORS.textSecondary} />
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Entrenar</Text>
+            <View style={styles.quickActions}>
+              <QuickAction icon="add-circle-outline" label={`Agregar\nentrenamiento`} onPress={() => navigation.navigate('AddWorkout')} />
+              <QuickAction icon="bar-chart-outline" label={`Ver\nentrenamientos`} onPress={() => navigation.navigate('ViewWorkouts')} />
+              <QuickAction icon="body-outline" label={`Medición\nIMC`} onPress={() => navigation.navigate('IMC')} />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={styles.scienceIACard}
+            onPress={() => navigation.navigate('ScienceIA')}
+            activeOpacity={0.85}
+          >
+            <View style={styles.scienceIALeft}>
+              <MaterialCommunityIcons name="robot-outline" size={32} color={COLORS.primary} />
+              <View style={{ marginLeft: 14 }}>
+                <Text style={styles.scienceIATitle}>ScienceIA</Text>
+                <Text style={styles.scienceIASubtitle}>Análisis de técnica con IA</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color={COLORS.textTertiary} />
+          </TouchableOpacity>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Rutinas semanales</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.splitsScroll}>
+              {Object.keys(SPLIT_INFO).map((splitType) => {
+                const split = SPLIT_INFO[splitType];
+                return (
+                  <View key={splitType} style={styles.splitCardWrapper}>
+                    <TouchableOpacity
+                      style={styles.splitCard}
+                      onPress={() => navigateToSplit(splitType)}
+                      activeOpacity={0.7}
+                    >
+                      <MaterialCommunityIcons name={split.icon} size={32} color={COLORS.textSecondary} style={{ marginBottom: 10 }} />
+                      <Text style={styles.splitName}>{split.name}</Text>
+                      <Text style={styles.splitDays}>{split.daysPerWeek}d/sem</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.splitInfoBtn}
+                      onPress={() => showSplitInfo(splitType)}
+                    >
+                      <Ionicons name="information-circle-outline" size={16} color={COLORS.primary} />
+                    </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Estudios científicos</Text>
+            <View style={styles.studiesRow}>
+              {STUDIES.map((study, i) => (
+                <TouchableOpacity key={i} style={styles.studyCard} activeOpacity={0.7}>
+                  <View style={styles.studyMeta}>
+                    <Text style={styles.studyAuthor}>{study.author}</Text>
+                    <Text style={styles.studyDate}>{study.date}</Text>
+                  </View>
+                  <Text style={styles.studyTitle}>{study.title}</Text>
+                  <View style={styles.studyPlaceholder}>
+                    <Ionicons name="document-text-outline" size={22} color={COLORS.textTertiary} />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.section}>
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
+              <Ionicons name="log-out-outline" size={18} color={COLORS.primary} />
+              <Text style={styles.logoutBtnText}>Cerrar sesión</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={{ height: 32 }} />
+        </Animated.View>
+
+        <Modal
+          animationType="fade"
+          transparent
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeader}>
+                {selectedSplit && (
+                  <MaterialCommunityIcons name={selectedSplit.icon} size={40} color={COLORS.primary} style={{ marginBottom: 12 }} />
+                )}
+                <Text style={styles.modalTitle}>{selectedSplit?.fullNameSpanish}</Text>
+                <Text style={styles.modalSubtitle}>{selectedSplit?.fullName}</Text>
+              </View>
+              <View style={styles.modalFreq}>
+                <Text style={styles.modalFreqLabel}>Frecuencia semanal</Text>
+                <Text style={styles.modalFreqValue}>{selectedSplit?.daysPerWeek} días</Text>
+              </View>
+              <Text style={styles.modalDesc}>{selectedSplit?.description}</Text>
+              <TouchableOpacity style={styles.modalBtn} onPress={() => setModalVisible(false)}>
+                <Text style={styles.modalBtnText}>Entendido</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  scroll: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: '#fff',
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 8,
   },
   greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 26,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
   },
   subGreeting: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 5,
+    color: COLORS.textSecondary,
+    marginTop: 2,
   },
-  profileButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+  avatarBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
-  },
-  profileIcon: {
-    fontSize: 24,
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
   section: {
-    paddingHorizontal: 20,
-    marginBottom: 30,
+    paddingHorizontal: 24,
+    marginTop: 28,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#000',
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 14,
+    letterSpacing: -0.2,
   },
-  buttonRow: {
+  quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 10,
   },
-  actionButton: {
+  quickAction: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    borderRadius: 15,
-    marginHorizontal: 5,
+  },
+  quickActionInner: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    gap: 10,
   },
-  buttonIcon: {
-    fontSize: 30,
-    marginBottom: 10,
+  quickActionIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonText: {
-    fontSize: 12,
-    textAlign: 'center',
+  quickActionLabel: {
+    fontSize: 11,
     fontWeight: '600',
-    color: '#333',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    lineHeight: 15,
   },
-  scienceIAButton: {
+  scienceIACard: {
     flexDirection: 'row',
-    backgroundColor: '#4A90E2',
-    marginHorizontal: 20,
-    marginBottom: 30,
-    padding: 20,
-    borderRadius: 15,
     alignItems: 'center',
-  },
-  scienceIAIcon: {
-    fontSize: 40,
-    marginRight: 15,
-  },
-  scienceIATitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  scienceIASubtitle: {
-    fontSize: 12,
-    color: '#fff',
-    marginTop: 5,
-    opacity: 0.9,
-  },
-  arrowIcon: {
-    fontSize: 24,
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  splitCardWrapper: {
-    marginRight: 20,
-    marginTop: 8,
-    paddingTop: 8,
-    paddingRight: 8,
-    position: 'relative',
-    overflow: 'visible',
-  },
-  splitCard: {
-    width: 100,
-    height: 120,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    overflow: 'visible',
-  },
-  splitIcon: {
-    fontSize: 40,
-    marginBottom: 10,
-  },
-  splitName: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: '#333',
-  },
-  infoButton: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    backgroundColor: '#4A90E2',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginHorizontal: 24,
+    marginTop: 28,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
-  infoButtonText: {
-    fontSize: 16,
-  },
-  studiesContainer: {
+  scienceIALeft: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  scienceIATitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
+  },
+  scienceIASubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    marginTop: 2,
+  },
+  splitsScroll: {
+    paddingRight: 8,
+    gap: 12,
+  },
+  splitCardWrapper: {
+    position: 'relative',
+  },
+  splitCard: {
+    width: 96,
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+  },
+  splitName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    textAlign: 'center',
+  },
+  splitDays: {
+    fontSize: 11,
+    color: COLORS.textTertiary,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  splitInfoBtn: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    backgroundColor: COLORS.background,
+    borderRadius: 10,
+    width: 22,
+    height: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  studiesRow: {
+    flexDirection: 'row',
+    gap: 10,
   },
   studyCard: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
     padding: 12,
-    marginHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
-  studyHeader: {
+  studyMeta: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   studyAuthor: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
   },
   studyDate: {
     fontSize: 10,
-    color: '#999',
+    color: COLORS.textTertiary,
   },
   studyTitle: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+    lineHeight: 15,
     marginBottom: 10,
-    color: '#333',
   },
-  studyImage: {
-    height: 80,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 10,
+  studyPlaceholder: {
+    height: 60,
+    backgroundColor: COLORS.border,
+    borderRadius: 8,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: '#FFCDD2',
   },
-  studyImagePlaceholder: {
-    fontSize: 30,
+  logoutBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.primary,
   },
-  logoutButton: {
-    backgroundColor: '#FFF0F0',
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#FFD0D0',
-  },
-  logoutButtonText: {
-    fontSize: 16,
-    color: '#D32F2F',
-    fontWeight: 'bold',
-  },
-  // Estilos del Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 24,
   },
-  modalContent: {
-    backgroundColor: '#fff',
+  modalCard: {
+    backgroundColor: COLORS.background,
     borderRadius: 20,
-    padding: 25,
+    padding: 24,
     width: '100%',
-    maxWidth: 400,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 24,
+    elevation: 8,
   },
   modalHeader: {
     alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalIcon: {
-    fontSize: 50,
-    marginBottom: 10,
+    marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 20,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
     textAlign: 'center',
+    letterSpacing: -0.2,
   },
   modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
-    textAlign: 'center',
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    marginTop: 4,
   },
-  modalFrequency: {
-    backgroundColor: '#F0F8FF',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
+  modalFreq: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 14,
     alignItems: 'center',
+    marginBottom: 16,
   },
-  frequencyLabel: {
+  modalFreqLabel: {
+    fontSize: 12,
+    color: COLORS.textTertiary,
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+  modalFreqValue: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.primary,
+    letterSpacing: -0.5,
+  },
+  modalDesc: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
-  frequencyValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#4A90E2',
-  },
-  modalDescription: {
-    fontSize: 15,
-    color: '#666',
+    color: COLORS.textSecondary,
     lineHeight: 22,
     textAlign: 'center',
-    marginBottom: 25,
+    marginBottom: 20,
   },
-  modalButton: {
-    backgroundColor: '#4A90E2',
-    paddingVertical: 15,
-    borderRadius: 10,
+  modalBtn: {
+    height: 52,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
+  modalBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });

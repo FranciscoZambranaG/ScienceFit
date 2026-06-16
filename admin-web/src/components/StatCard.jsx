@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-function useCountUp(target, duration = 1500) {
+function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0)
 
   useEffect(() => {
@@ -29,14 +29,24 @@ function useCountUp(target, duration = 1500) {
   return count
 }
 
+const ICON_BG = {
+  '#C62828': '#FFEBEE',
+  '#16A34A': '#DCFCE7',
+  '#16a34a': '#DCFCE7',
+  '#D97706': '#FEF3C7',
+  '#d97706': '#FEF3C7',
+  '#7c3aed': '#EDE9FE',
+  '#2563EB': '#DBEAFE',
+  '#1a1a2e': '#E8E8F0',
+}
+
 export default function StatCard({ icon, value, label, accent = '#C62828', trend }) {
   const displayValue = useCountUp(typeof value === 'number' ? value : 0)
+  const iconBg = ICON_BG[accent] || `${accent}18`
 
   return (
     <div className="card" style={{
-      background: '#fff',
-      borderRadius: 14,
-      padding: '20px 20px',
+      padding: '20px 22px',
       display: 'flex',
       alignItems: 'center',
       gap: 16,
@@ -44,10 +54,10 @@ export default function StatCard({ icon, value, label, accent = '#C62828', trend
       minWidth: 180,
     }}>
       <div style={{
-        width: 52,
-        height: 52,
-        borderRadius: 12,
-        background: `${accent}18`,
+        width: 40,
+        height: 40,
+        borderRadius: '50%',
+        background: iconBg,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -56,23 +66,29 @@ export default function StatCard({ icon, value, label, accent = '#C62828', trend
       }}>
         {icon}
       </div>
+
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize: 30,
+          fontSize: 32,
           fontWeight: 700,
           color: 'var(--text-primary)',
-          lineHeight: 1.1,
-          letterSpacing: '-0.02em',
+          lineHeight: 1,
+          letterSpacing: '-0.03em',
           fontVariantNumeric: 'tabular-nums',
+          marginBottom: 4,
         }}>
           {typeof value === 'number' ? displayValue : (value ?? '—')}
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 4, fontWeight: 500 }}>
+        <div style={{
+          fontSize: 13,
+          color: 'var(--text-secondary)',
+          fontWeight: 400,
+        }}>
           {label}
         </div>
         {trend !== undefined && (
           <div style={{
-            fontSize: 12,
+            fontSize: 11,
             color: trend >= 0 ? 'var(--success)' : 'var(--primary)',
             marginTop: 4,
             fontWeight: 600,

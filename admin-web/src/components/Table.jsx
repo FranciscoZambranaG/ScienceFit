@@ -5,7 +5,7 @@ export function TableSkeleton({ cols = 5, rows = 5 }) {
         <tr>
           {Array.from({ length: cols }).map((_, i) => (
             <th key={i}>
-              <div className="skeleton skeleton-text" style={{ width: '70%' }} />
+              <div className="skeleton skeleton-text" style={{ width: '60%' }} />
             </th>
           ))}
         </tr>
@@ -17,7 +17,7 @@ export function TableSkeleton({ cols = 5, rows = 5 }) {
               <td key={ci}>
                 <div
                   className="skeleton skeleton-text"
-                  style={{ width: ci === 0 ? '80%' : ci === cols - 1 ? '60%' : '75%', height: 14 }}
+                  style={{ width: ci === 0 ? '75%' : ci === cols - 1 ? '55%' : '70%' }}
                 />
               </td>
             ))}
@@ -50,7 +50,12 @@ export default function Table({ columns, data, emptyMessage = 'No hay datos', lo
         <tbody>
           {!data || data.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 48 }}>
+              <td colSpan={columns.length} style={{
+                textAlign: 'center',
+                color: 'var(--text-tertiary)',
+                padding: '48px 16px',
+                fontSize: 13,
+              }}>
                 {emptyMessage}
               </td>
             </tr>

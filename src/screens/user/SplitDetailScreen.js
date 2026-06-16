@@ -1,305 +1,344 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useEffect, useRef } from 'react';
 import {
+  Animated,
+  Easing,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
 import { SPLITS_DATA } from '../../utils/splitsData';
+
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+};
 
 export const SplitDetailScreen = ({ navigation, route }) => {
   const { splitType } = route.params;
   const split = SPLITS_DATA[splitType];
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(16)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, []);
+
   if (!split) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.safe}>
+        <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backIcon}>←</Text>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Split no encontrado</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.errorContainer}>
-          <Ionicons name="close-circle-outline" size={80} color="#D32F2F" style={{ marginBottom: 20 }} />
-          <Text style={styles.errorText}>No se encontró información del split</Text>
-          <TouchableOpacity
-            style={styles.backHomeButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backHomeButtonText}>← Volver</Text>
+          <Ionicons name="close-circle-outline" size={56} color={COLORS.primary} style={{ marginBottom: 16 }} />
+          <Text style={styles.errorTitle}>No se encontró información del split</Text>
+          <TouchableOpacity style={styles.errorBtn} onPress={() => navigation.goBack()}>
+            <Text style={styles.errorBtnText}>Volver</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
+  const NOTES = [
+    { icon: 'bulb-outline', text: 'Este split está basado en principios científicos de hipertrofia y frecuencia óptima de entrenamiento.' },
+    { icon: 'timer-outline', text: 'Descansa 2-3 minutos entre series de ejercicios compuestos y 1-2 minutos en aislamiento.' },
+    { icon: 'trending-up-outline', text: 'Progresa incrementando peso cuando puedas completar todas las series en el rango superior de repeticiones.' },
+  ];
+
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <MaterialCommunityIcons name={split.icon} size={20} color="#000" style={{ marginRight: 6 }} />
-          <Text style={styles.headerTitle}>{split.name}</Text>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.descriptionSection}>
-        <Text style={styles.description}>{split.description}</Text>
-      </View>
-
-      {Object.entries(split.days).map(([dayName, exercises]) => (
-        <View key={dayName} style={styles.daySection}>
-          <View style={styles.dayHeader}>
-            <Text style={styles.dayTitle}>{dayName}</Text>
-            <Text style={styles.daySubtitle}>{exercises.length} ejercicios</Text>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <View style={styles.headerCenter}>
+              <MaterialCommunityIcons name={split.icon} size={18} color={COLORS.primary} />
+              <Text style={styles.headerTitle}>{split.name}</Text>
+            </View>
+            <View style={{ width: 40 }} />
           </View>
 
-          {exercises.map((exercise, index) => (
-            <View key={index} style={styles.exerciseCard}>
-              <View style={styles.exerciseNumber}>
-                <Text style={styles.exerciseNumberText}>{index + 1}</Text>
-              </View>
-              <View style={styles.exerciseInfo}>
-                <Text style={styles.exerciseName}>{exercise.name}</Text>
-                <View style={styles.exerciseDetails}>
-                  <View style={styles.detailBadge}>
-                    <Text style={styles.detailBadgeText}>
-                      {exercise.sets} series
-                    </Text>
-                  </View>
-                  <View style={styles.detailBadge}>
-                    <Text style={styles.detailBadgeText}>
-                      {exercise.repsRange} reps
-                    </Text>
-                  </View>
-                  <View style={[styles.detailBadge, styles.muscleGroupBadge]}>
-                    <Text style={[styles.detailBadgeText, styles.muscleGroupText]}>
-                      {exercise.muscleGroup}
-                    </Text>
-                  </View>
+          <View style={styles.descCard}>
+            <Text style={styles.descText}>{split.description}</Text>
+          </View>
+
+          {Object.entries(split.days).map(([dayName, exercises]) => (
+            <View key={dayName} style={styles.daySection}>
+              <View style={styles.dayHeader}>
+                <Text style={styles.dayTitle}>{dayName}</Text>
+                <View style={styles.dayBadge}>
+                  <Text style={styles.dayBadgeText}>{exercises.length} ejercicios</Text>
                 </View>
               </View>
+
+              {exercises.map((exercise, index) => (
+                <View key={index} style={styles.exerciseCard}>
+                  <View style={styles.exerciseNum}>
+                    <Text style={styles.exerciseNumText}>{index + 1}</Text>
+                  </View>
+                  <View style={styles.exerciseInfo}>
+                    <Text style={styles.exerciseName}>{exercise.name}</Text>
+                    <View style={styles.badgeRow}>
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{exercise.sets} series</Text>
+                      </View>
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{exercise.repsRange} reps</Text>
+                      </View>
+                      <View style={[styles.badge, styles.badgeMuscle]}>
+                        <Text style={[styles.badgeText, styles.badgeMuscleText]}>{exercise.muscleGroup}</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              ))}
             </View>
           ))}
-        </View>
-      ))}
 
-      <View style={styles.notesSection}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-          <Ionicons name="clipboard-outline" size={18} color="#000" style={{ marginRight: 8 }} />
-          <Text style={[styles.notesTitle, { marginBottom: 0 }]}>Notas del Split</Text>
-        </View>
-        <View style={styles.noteCard}>
-          <Ionicons name="bulb-outline" size={24} color="#333" style={{ marginRight: 15 }} />
-          <Text style={styles.noteText}>
-            Este split está basado en principios científicos de hipertrofia y frecuencia óptima de entrenamiento.
-          </Text>
-        </View>
-        <View style={styles.noteCard}>
-          <Ionicons name="timer-outline" size={24} color="#333" style={{ marginRight: 15 }} />
-          <Text style={styles.noteText}>
-            Descansa 2-3 minutos entre series de ejercicios compuestos y 1-2 minutos en ejercicios de aislamiento.
-          </Text>
-        </View>
-        <View style={styles.noteCard}>
-          <Ionicons name="trending-up-outline" size={24} color="#333" style={{ marginRight: 15 }} />
-          <Text style={styles.noteText}>
-            Progresa incrementando peso cuando puedas completar todas las series en el rango superior de repeticiones.
-          </Text>
-        </View>
-      </View>
+          <View style={styles.notesSection}>
+            <Text style={styles.notesSectionTitle}>Notas del split</Text>
+            {NOTES.map((note, i) => (
+              <View key={i} style={styles.noteCard}>
+                <View style={styles.noteIconWrap}>
+                  <Ionicons name={note.icon} size={18} color={COLORS.textSecondary} />
+                </View>
+                <Text style={styles.noteText}>{note.text}</Text>
+              </View>
+            ))}
+          </View>
 
-      <View style={{ height: 40 }} />
-    </ScrollView>
+          <View style={{ height: 40 }} />
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: COLORS.border,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  backIcon: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  descriptionSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#f8f8f8',
+  descCard: {
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.border,
   },
-  description: {
+  descText: {
     fontSize: 14,
-    color: '#666',
+    color: COLORS.textSecondary,
     lineHeight: 22,
-    textAlign: 'center',
   },
   daySection: {
-    paddingHorizontal: 20,
-    marginTop: 30,
+    paddingHorizontal: 24,
+    marginTop: 28,
   },
   dayHeader: {
-    marginBottom: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
   dayTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  daySubtitle: {
-    fontSize: 12,
-    color: '#999',
+  dayBadge: {
+    backgroundColor: COLORS.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  dayBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textTertiary,
   },
   exerciseCard: {
     flexDirection: 'row',
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    padding: 15,
+    alignItems: 'flex-start',
+    backgroundColor: COLORS.surface,
+    borderRadius: 14,
+    padding: 14,
     marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
-  exerciseNumber: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#D32F2F',
-    justifyContent: 'center',
+  exerciseNum: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: COLORS.primary,
     alignItems: 'center',
-    marginRight: 15,
+    justifyContent: 'center',
+    marginRight: 12,
+    marginTop: 1,
   },
-  exerciseNumberText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  exerciseNumText: {
+    fontSize: 13,
+    fontWeight: '700',
     color: '#fff',
   },
   exerciseInfo: {
     flex: 1,
   },
   exerciseName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#000',
+    color: COLORS.textPrimary,
     marginBottom: 8,
+    letterSpacing: -0.1,
   },
-  exerciseDetails: {
+  badgeRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 6,
   },
-  detailBadge: {
-    backgroundColor: '#fff',
+  badge: {
+    backgroundColor: COLORS.background,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 12,
-    marginRight: 8,
-    marginBottom: 5,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
-  detailBadgeText: {
-    fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
+  badgeText: {
+    fontSize: 11,
+    color: COLORS.textSecondary,
+    fontWeight: '600',
   },
-  muscleGroupBadge: {
-    backgroundColor: '#E3F2FD',
+  badgeMuscle: {
+    backgroundColor: COLORS.primaryLight,
+    borderColor: '#FFCDD2',
   },
-  muscleGroupText: {
-    color: '#1976D2',
+  badgeMuscleText: {
+    color: COLORS.primary,
   },
   notesSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    backgroundColor: '#f8f8f8',
-    marginTop: 30,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
+    backgroundColor: COLORS.surface,
+    marginTop: 28,
   },
-  notesTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#000',
+  notesSectionTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+    letterSpacing: -0.2,
   },
   noteCard: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: COLORS.background,
     borderRadius: 12,
-    padding: 15,
-    marginBottom: 12,
+    padding: 14,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: COLORS.border,
   },
-  noteIcon: {
-    fontSize: 24,
-    marginRight: 15,
+  noteIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: COLORS.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
   },
   noteText: {
     flex: 1,
-    fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 19,
   },
   errorContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 40,
   },
-  errorIcon: {
-    fontSize: 80,
-    marginBottom: 20,
-  },
-  errorText: {
+  errorTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 30,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
     textAlign: 'center',
+    marginBottom: 24,
+    letterSpacing: -0.2,
   },
-  backHomeButton: {
-    backgroundColor: '#D32F2F',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 10,
+  errorBtn: {
+    backgroundColor: COLORS.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 14,
   },
-  backHomeButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  errorBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
     color: '#fff',
   },
 });

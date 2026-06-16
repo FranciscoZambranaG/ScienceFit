@@ -1,19 +1,78 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
-import { CustomButton } from '../../components/CustomButton';
+
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+  success: '#10B981',
+  successLight: '#ECFDF5',
+  warning: '#F59E0B',
+  warningLight: '#FFFBEB',
+  info: '#3B82F6',
+  infoLight: '#EFF6FF',
+};
+
+const FEATURES = [
+  { icon: 'body-outline', title: 'Biomecánica', desc: 'Análisis de ángulos articulares y alineación' },
+  { icon: 'expand-outline', title: 'Rango de movimiento', desc: 'Verifica ROM completo y efectivo' },
+  { icon: 'time-outline', title: 'Tempo de ejecución', desc: 'Mide velocidad excéntrica y concéntrica' },
+  { icon: 'navigate-outline', title: 'Estabilidad', desc: 'Detecta compensaciones y desbalances' },
+];
+
+const TIPS = [
+  { icon: 'navigate-outline', text: 'Graba desde un ángulo lateral para mejor análisis' },
+  { icon: 'sunny-outline', text: 'Asegura buena iluminación' },
+  { icon: 'phone-portrait-outline', text: 'Mantén la cámara estable' },
+  { icon: 'repeat-outline', text: 'Graba al menos 3 repeticiones completas' },
+];
 
 export const ScienceIAScreen = ({ navigation }) => {
   const [analyzing, setAnalyzing] = useState(false);
   const [videoSelected, setVideoSelected] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(16)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 400, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  useEffect(() => {
+    if (analyzing) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, { toValue: 1.05, duration: 700, useNativeDriver: true }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseAnim.setValue(1);
+    }
+  }, [analyzing]);
 
   const handleSelectVideo = () => {
     Alert.alert(
@@ -21,49 +80,23 @@ export const ScienceIAScreen = ({ navigation }) => {
       'Elige una opción',
       [
         { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Grabar Nuevo',
-          onPress: () => {
-            setVideoSelected(true);
-            Alert.alert('Info', 'En producción se abriría la cámara');
-          }
-        },
-        {
-          text: 'Galería',
-          onPress: () => {
-            setVideoSelected(true);
-            Alert.alert('Info', 'En producción se abriría la galería');
-          }
-        }
+        { text: 'Grabar nuevo', onPress: () => { setVideoSelected(true); Alert.alert('Info', 'En producción se abriría la cámara'); } },
+        { text: 'Galería', onPress: () => { setVideoSelected(true); Alert.alert('Info', 'En producción se abriría la galería'); } }
       ]
     );
   };
 
   const handleAnalyze = () => {
     setAnalyzing(true);
-
-    // Simulación de análisis con IA
     setTimeout(() => {
       setAnalysisResult({
         exercise: 'Press Banca',
         score: 8.5,
         feedback: [
-          {
-            type: 'success',
-            text: 'Buena retracción escapular durante todo el movimiento'
-          },
-          {
-            type: 'warning',
-            text: 'Los codos se abren ligeramente más de 45° en la fase excéntrica'
-          },
-          {
-            type: 'info',
-            text: 'Velocidad de ejecución: 2-1-2 (óptimo para hipertrofia)'
-          },
-          {
-            type: 'success',
-            text: 'ROM completo alcanzado en todas las repeticiones'
-          },
+          { type: 'success', text: 'Buena retracción escapular durante todo el movimiento' },
+          { type: 'warning', text: 'Los codos se abren ligeramente más de 45° en la fase excéntrica' },
+          { type: 'info', text: 'Velocidad de ejecución: 2-1-2 (óptimo para hipertrofia)' },
+          { type: 'success', text: 'ROM completo alcanzado en todas las repeticiones' },
         ],
         recommendations: [
           'Intenta mantener los codos a 45° para reducir estrés en hombros',
@@ -75,502 +108,497 @@ export const ScienceIAScreen = ({ navigation }) => {
     }, 3000);
   };
 
-  const getColorForType = (type) => {
-    switch(type) {
-      case 'success': return '#4CAF50';
-      case 'warning': return '#FF9800';
-      case 'error': return '#F44336';
-      default: return '#2196F3';
+  const getFeedbackStyle = (type) => {
+    switch (type) {
+      case 'success': return { bg: COLORS.successLight, border: '#D1FAE5', icon: 'checkmark-circle-outline', color: COLORS.success };
+      case 'warning': return { bg: COLORS.warningLight, border: '#FDE68A', icon: 'warning-outline', color: COLORS.warning };
+      default: return { bg: COLORS.infoLight, border: '#BFDBFE', icon: 'information-circle-outline', color: COLORS.info };
     }
   };
 
-  const getIconForType = (type) => {
-    const color = getColorForType(type);
-    switch(type) {
-      case 'success': return <Ionicons name="checkmark-circle-outline" size={18} color={color} style={{ marginRight: 10 }} />;
-      case 'warning': return <Ionicons name="warning-outline" size={18} color={color} style={{ marginRight: 10 }} />;
-      case 'error': return <Ionicons name="close-circle-outline" size={18} color={color} style={{ marginRight: 10 }} />;
-      default: return <Ionicons name="information-circle-outline" size={18} color={color} style={{ marginRight: 10 }} />;
-    }
-  };
+  const pressIn = () => Animated.timing(scaleBtn, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const pressOut = () => Animated.timing(scaleBtn, { toValue: 1, duration: 100, useNativeDriver: true }).start();
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>ScienceIA</Text>
-        <View style={{ width: 40 }} />
-      </View>
-
-      <View style={styles.heroSection}>
-        <MaterialCommunityIcons name="robot-outline" size={60} color="#fff" style={{ marginBottom: 15 }} />
-        <Text style={styles.heroTitle}>Análisis de Técnica con IA</Text>
-        <Text style={styles.heroSubtitle}>
-          Graba tu ejecución y recibe feedback biomecánico instantáneo
-        </Text>
-      </View>
-
-      {!videoSelected ? (
-        <View style={styles.section}>
-          <View style={styles.uploadContainer}>
-            <Ionicons name="videocam-outline" size={60} color="#666" style={{ marginBottom: 15 }} />
-            <Text style={styles.uploadText}>Sube o graba un video</Text>
-            <Text style={styles.uploadSubtext}>
-              Asegúrate de que se vea todo tu cuerpo y el movimiento completo
-            </Text>
-            <CustomButton
-              title="Seleccionar Video"
-              onPress={handleSelectVideo}
-              style={{ marginTop: 20 }}
-            />
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={20} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>ScienceIA</Text>
+            <View style={{ width: 40 }} />
           </View>
 
-          <View style={styles.tipsSection}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-              <Ionicons name="bulb-outline" size={18} color="#000" style={{ marginRight: 6 }} />
-              <Text style={[styles.tipsTitle, { marginBottom: 0 }]}>Consejos para mejores resultados:</Text>
+          <View style={styles.heroCard}>
+            <View style={styles.heroIconWrap}>
+              <MaterialCommunityIcons name="robot-outline" size={32} color={COLORS.primary} />
             </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="navigate-outline" size={20} color="#333" style={{ marginRight: 10 }} />
-              <Text style={styles.tipText}>Graba desde un ángulo lateral para mejor análisis</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="bulb-outline" size={20} color="#333" style={{ marginRight: 10 }} />
-              <Text style={styles.tipText}>Asegura buena iluminación</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="help-circle-outline" size={20} color="#333" style={{ marginRight: 10 }} />
-              <Text style={styles.tipText}>Mantén la cámara estable</Text>
-            </View>
-            <View style={styles.tipItem}>
-              <Ionicons name="time-outline" size={20} color="#333" style={{ marginRight: 10 }} />
-              <Text style={styles.tipText}>Graba al menos 3 repeticiones completas</Text>
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text style={styles.heroTitle}>Análisis de técnica con IA</Text>
+              <Text style={styles.heroSubtitle}>Feedback biomecánico instantáneo</Text>
             </View>
           </View>
-        </View>
-      ) : !analysisResult ? (
-        <View style={styles.section}>
-          <View style={styles.videoPreview}>
-            <Ionicons name="videocam-outline" size={60} color="#2E7D32" style={{ marginBottom: 15 }} />
-            <Text style={styles.videoPreviewText}>Video listo para analizar</Text>
-          </View>
 
-          <CustomButton
-            title={analyzing ? "Analizando..." : "Analizar con IA"}
-            onPress={handleAnalyze}
-            disabled={analyzing}
-            style={{ backgroundColor: analyzing ? '#999' : '#4A90E2' }}
-          />
+          {!videoSelected ? (
+            <View style={styles.section}>
+              <View style={styles.uploadZone}>
+                <Ionicons name="videocam-outline" size={36} color={COLORS.textTertiary} style={{ marginBottom: 12 }} />
+                <Text style={styles.uploadTitle}>Sube o graba un video</Text>
+                <Text style={styles.uploadHint}>Asegúrate de que se vea todo tu cuerpo</Text>
+                <TouchableOpacity style={styles.uploadBtn} onPress={handleSelectVideo} activeOpacity={0.7}>
+                  <Ionicons name="cloud-upload-outline" size={18} color={COLORS.primary} />
+                  <Text style={styles.uploadBtnText}>Seleccionar video</Text>
+                </TouchableOpacity>
+              </View>
 
-          {analyzing && (
-            <View style={styles.analyzingContainer}>
-              <Text style={styles.analyzingText}>Analizando tu técnica...</Text>
-              <Text style={styles.analyzingSubtext}>
-                Evaluando biomecánica, ROM, tempo y ejecución
-              </Text>
+              <Text style={styles.tipsTitle}>Para mejores resultados</Text>
+              {TIPS.map((tip, i) => (
+                <View key={i} style={styles.tipRow}>
+                  <View style={styles.tipIconWrap}>
+                    <Ionicons name={tip.icon} size={16} color={COLORS.primary} />
+                  </View>
+                  <Text style={styles.tipText}>{tip.text}</Text>
+                </View>
+              ))}
+            </View>
+          ) : !analysisResult ? (
+            <View style={styles.section}>
+              <View style={styles.videoReadyCard}>
+                <Ionicons name="videocam" size={28} color={COLORS.success} />
+                <Text style={styles.videoReadyText}>Video listo para analizar</Text>
+              </View>
+
+              {analyzing ? (
+                <Animated.View style={[styles.analyzingCard, { transform: [{ scale: pulseAnim }] }]}>
+                  <MaterialCommunityIcons name="brain" size={22} color={COLORS.primary} />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.analyzingTitle}>Analizando técnica...</Text>
+                    <Text style={styles.analyzingSubtitle}>Evaluando biomecánica, ROM, tempo y ejecución</Text>
+                  </View>
+                </Animated.View>
+              ) : (
+                <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+                  <TouchableOpacity
+                    style={styles.analyzeBtn}
+                    onPress={handleAnalyze}
+                    onPressIn={pressIn}
+                    onPressOut={pressOut}
+                    activeOpacity={1}
+                  >
+                    <MaterialCommunityIcons name="robot-outline" size={20} color="#fff" />
+                    <Text style={styles.analyzeBtnText}>Analizar con IA</Text>
+                  </TouchableOpacity>
+                </Animated.View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.section}>
+              <View style={styles.resultCard}>
+                <View style={styles.resultHeader}>
+                  <Text style={styles.resultExercise}>{analysisResult.exercise}</Text>
+                  <View style={styles.scoreWrap}>
+                    <Text style={styles.scoreNumber}>{analysisResult.score}</Text>
+                    <Text style={styles.scoreDenom}>/10</Text>
+                  </View>
+                </View>
+
+                <Text style={styles.resultSectionLabel}>Análisis detallado</Text>
+                {analysisResult.feedback.map((item, index) => {
+                  const fs = getFeedbackStyle(item.type);
+                  return (
+                    <View key={index} style={[styles.feedbackItem, { backgroundColor: fs.bg, borderColor: fs.border }]}>
+                      <Ionicons name={fs.icon} size={16} color={fs.color} style={{ marginRight: 10, marginTop: 2 }} />
+                      <Text style={[styles.feedbackText, { color: fs.color }]}>{item.text}</Text>
+                    </View>
+                  );
+                })}
+
+                <Text style={[styles.resultSectionLabel, { marginTop: 16 }]}>Recomendaciones</Text>
+                {analysisResult.recommendations.map((rec, index) => (
+                  <View key={index} style={styles.recRow}>
+                    <View style={styles.recDot} />
+                    <Text style={styles.recText}>{rec}</Text>
+                  </View>
+                ))}
+
+                <View style={styles.resultActions}>
+                  <TouchableOpacity
+                    style={styles.secondaryBtn}
+                    onPress={() => { setVideoSelected(false); setAnalysisResult(null); }}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="refresh-outline" size={16} color={COLORS.textSecondary} />
+                    <Text style={styles.secondaryBtnText}>Nuevo análisis</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.primaryBtn}
+                    onPress={() => Alert.alert('Info', 'Análisis guardado')}
+                    activeOpacity={0.8}
+                  >
+                    <Ionicons name="save-outline" size={16} color="#fff" />
+                    <Text style={styles.primaryBtnText}>Guardar</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
           )}
-        </View>
-      ) : (
-        <View style={styles.section}>
-          <View style={styles.resultCard}>
-            <View style={styles.resultHeader}>
-              <Text style={styles.resultExercise}>{analysisResult.exercise}</Text>
-              <View style={styles.scoreContainer}>
-                <Text style={styles.scoreNumber}>{analysisResult.score}</Text>
-                <Text style={styles.scoreLabel}>/10</Text>
+
+          <View style={styles.featuresSection}>
+            <Text style={styles.featuresTitle}>Qué analiza ScienceIA</Text>
+            {FEATURES.map((feature, i) => (
+              <View key={i} style={styles.featureRow}>
+                <View style={styles.featureIconWrap}>
+                  <Ionicons name={feature.icon} size={20} color={COLORS.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.featureTitle}>{feature.title}</Text>
+                  <Text style={styles.featureDesc}>{feature.desc}</Text>
+                </View>
               </View>
-            </View>
-
-            <View style={styles.feedbackSection}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-                <Ionicons name="bar-chart-outline" size={18} color="#000" style={{ marginRight: 6 }} />
-                <Text style={[styles.feedbackTitle, { marginBottom: 0 }]}>Análisis Detallado:</Text>
-              </View>
-              {analysisResult.feedback.map((item, index) => (
-                <View key={index} style={styles.feedbackItem}>
-                  {getIconForType(item.type)}
-                  <Text style={[styles.feedbackText, { color: getColorForType(item.type) }]}>
-                    {item.text}
-                  </Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.recommendationsSection}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 15 }}>
-                <MaterialCommunityIcons name="dumbbell" size={18} color="#2E7D32" style={{ marginRight: 6 }} />
-                <Text style={[styles.recommendationsTitle, { marginBottom: 0 }]}>Recomendaciones:</Text>
-              </View>
-              {analysisResult.recommendations.map((rec, index) => (
-                <View key={index} style={styles.recommendationItem}>
-                  <Text style={styles.recommendationBullet}>•</Text>
-                  <Text style={styles.recommendationText}>{rec}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={styles.secondaryButton}
-                onPress={() => {
-                  setVideoSelected(false);
-                  setAnalysisResult(null);
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="refresh-outline" size={16} color="#333" style={{ marginRight: 6 }} />
-                  <Text style={styles.secondaryButtonText}>Nuevo Análisis</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.primaryButton}
-                onPress={() => Alert.alert('Info', 'Análisis guardado')}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Ionicons name="save-outline" size={18} color="#fff" style={{ marginRight: 6 }} />
-                  <Text style={styles.primaryButtonText}>Guardar</Text>
-                </View>
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
-        </View>
-      )}
 
-      <View style={styles.featuresSection}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-          <Ionicons name="analytics-outline" size={20} color="#000" style={{ marginRight: 6 }} />
-          <Text style={[styles.featuresTitle, { marginBottom: 0 }]}>Qué analiza ScienceIA:</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Ionicons name="body-outline" size={30} color="#666" style={{ marginRight: 15 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.featureTitle}>Biomecánica</Text>
-            <Text style={styles.featureText}>Análisis de ángulos articulares y alineación</Text>
-          </View>
-        </View>
-        <View style={styles.featureItem}>
-          <Ionicons name="expand-outline" size={30} color="#666" style={{ marginRight: 15 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.featureTitle}>Rango de Movimiento</Text>
-            <Text style={styles.featureText}>Verifica ROM completo y efectivo</Text>
-          </View>
-        </View>
-        <View style={styles.featureItem}>
-          <Ionicons name="time-outline" size={30} color="#666" style={{ marginRight: 15 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.featureTitle}>Tempo de Ejecución</Text>
-            <Text style={styles.featureText}>Mide velocidad excéntrica y concéntrica</Text>
-          </View>
-        </View>
-        <View style={styles.featureItem}>
-          <Ionicons name="navigate-outline" size={30} color="#666" style={{ marginRight: 15 }} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.featureTitle}>Estabilidad</Text>
-            <Text style={styles.featureText}>Detecta compensaciones y desbalances</Text>
-          </View>
-        </View>
-      </View>
-    </ScrollView>
+          <View style={{ height: 40 }} />
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safe: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: COLORS.background,
+  },
+  container: {
+    flexGrow: 1,
+    paddingBottom: 24,
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
+    borderRadius: 12,
+    backgroundColor: COLORS.surface,
     alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  heroSection: {
-    alignItems: 'center',
-    paddingVertical: 30,
-    paddingHorizontal: 40,
-    backgroundColor: '#4A90E2',
-  },
-  heroIcon: {
-    fontSize: 60,
-    marginBottom: 15,
-  },
-  heroTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 10,
-  },
-  heroSubtitle: {
-    fontSize: 14,
-    color: '#fff',
-    textAlign: 'center',
-    opacity: 0.9,
-  },
-  section: {
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  uploadContainer: {
-    alignItems: 'center',
-    paddingVertical: 50,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: '#e0e0e0',
-  },
-  uploadIcon: {
-    fontSize: 60,
-    marginBottom: 15,
-  },
-  uploadText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 10,
-  },
-  uploadSubtext: {
-    fontSize: 12,
-    color: '#666',
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  tipsSection: {
-    marginTop: 30,
-    padding: 20,
-    backgroundColor: '#FFF9E6',
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: '#FFE57F',
-  },
-  tipsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#000',
-  },
-  tipItem: {
+  heroCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginHorizontal: 24,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    marginBottom: 24,
   },
-  tipIcon: {
-    fontSize: 20,
-    marginRight: 10,
-  },
-  tipText: {
-    fontSize: 14,
-    color: '#333',
-    flex: 1,
-  },
-  videoPreview: {
+  heroIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: COLORS.primaryLight,
     alignItems: 'center',
-    paddingVertical: 50,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 15,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#C8E6C9',
+    justifyContent: 'center',
   },
-  videoPreviewIcon: {
-    fontSize: 60,
-    marginBottom: 15,
+  heroTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
+    marginBottom: 4,
   },
-  videoPreviewText: {
+  heroSubtitle: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+  },
+  section: {
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  uploadZone: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
+    borderStyle: 'dashed',
+    padding: 36,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  uploadTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2E7D32',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
   },
-  analyzingContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-    padding: 20,
-    backgroundColor: '#E3F2FD',
-    borderRadius: 15,
-  },
-  analyzingText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1565C0',
-    marginBottom: 5,
-  },
-  analyzingSubtext: {
-    fontSize: 12,
-    color: '#1976D2',
+  uploadHint: {
+    fontSize: 13,
+    color: COLORS.textTertiary,
+    marginBottom: 20,
     textAlign: 'center',
   },
-  resultCard: {
-    backgroundColor: '#f8f8f8',
-    borderRadius: 15,
-    padding: 20,
+  uploadBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: COLORS.primaryLight,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.primary,
+  },
+  uploadBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.primary,
+  },
+  tipsTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 14,
+    letterSpacing: -0.2,
+  },
+  tipRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
+  tipIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
+  },
+  videoReadyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: COLORS.successLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#D1FAE5',
+  },
+  videoReadyText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: COLORS.success,
+  },
+  analyzingCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLORS.primaryLight,
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  analyzingTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: COLORS.primary,
+    marginBottom: 3,
+  },
+  analyzingSubtitle: {
+    fontSize: 12,
+    color: COLORS.primary,
+    opacity: 0.7,
+  },
+  analyzeBtn: {
+    height: 56,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  analyzeBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  resultCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
   resultHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
-    paddingBottom: 15,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: COLORS.border,
   },
   resultExercise: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.2,
   },
-  scoreContainer: {
+  scoreWrap: {
     flexDirection: 'row',
     alignItems: 'baseline',
   },
   scoreNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#4CAF50',
+    fontSize: 34,
+    fontWeight: '800',
+    color: COLORS.success,
+    letterSpacing: -1,
   },
-  scoreLabel: {
+  scoreDenom: {
     fontSize: 16,
-    color: '#666',
+    color: COLORS.textTertiary,
     marginLeft: 2,
   },
-  feedbackSection: {
-    marginBottom: 20,
-  },
-  feedbackTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#000',
+  resultSectionLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    marginBottom: 12,
+    letterSpacing: 0.2,
   },
   feedbackItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 12,
-    paddingLeft: 10,
-  },
-  feedbackIcon: {
-    fontSize: 18,
-    marginRight: 10,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
   },
   feedbackText: {
-    fontSize: 14,
     flex: 1,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '500',
   },
-  recommendationsSection: {
-    marginBottom: 20,
-    padding: 15,
-    backgroundColor: '#E8F5E9',
-    borderRadius: 10,
-  },
-  recommendationsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 15,
-    color: '#2E7D32',
-  },
-  recommendationItem: {
+  recRow: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
     marginBottom: 10,
+    gap: 10,
   },
-  recommendationBullet: {
-    fontSize: 18,
-    marginRight: 10,
-    color: '#4CAF50',
+  recDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.primary,
+    marginTop: 6,
   },
-  recommendationText: {
-    fontSize: 14,
+  recText: {
     flex: 1,
-    color: '#1B5E20',
+    fontSize: 14,
+    color: COLORS.textSecondary,
     lineHeight: 20,
   },
-  actionButtons: {
+  resultActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 10,
+    gap: 10,
+    marginTop: 16,
   },
-  secondaryButton: {
+  secondaryBtn: {
     flex: 1,
-    paddingVertical: 15,
-    borderRadius: 10,
-    backgroundColor: '#f0f0f0',
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 10,
+    justifyContent: 'center',
+    gap: 6,
+    height: 48,
+    backgroundColor: COLORS.background,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
   },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+  secondaryBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
   },
-  primaryButton: {
+  primaryBtn: {
     flex: 1,
-    paddingVertical: 15,
-    borderRadius: 10,
-    backgroundColor: '#4CAF50',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 48,
+    backgroundColor: COLORS.primary,
+    borderRadius: 12,
   },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
+  primaryBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#fff',
   },
   featuresSection: {
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    backgroundColor: '#f8f8f8',
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    backgroundColor: COLORS.surface,
+    marginHorizontal: 0,
   },
   featuresTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#000',
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+    letterSpacing: -0.2,
   },
-  featureItem: {
+  featureRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 20,
+    gap: 14,
+    marginBottom: 16,
   },
-  featureIcon: {
-    fontSize: 30,
-    marginRight: 15,
+  featureIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: COLORS.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   featureTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 5,
-  },
-  featureText: {
     fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 3,
+    letterSpacing: -0.1,
+  },
+  featureDesc: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    lineHeight: 17,
   },
 });

@@ -1,15 +1,32 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  Animated,
+  Easing,
+  SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
-  View
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { CustomButton } from '../../components/CustomButton';
 import { AuthContext } from '../../context/AuthContext';
 import { SPLITS_DATA } from '../../utils/splitsData';
+
+const COLORS = {
+  primary: '#C62828',
+  primaryLight: '#FFEBEE',
+  background: '#FFFFFF',
+  surface: '#F8F9FA',
+  textPrimary: '#0A0A0A',
+  textSecondary: '#6B7280',
+  textTertiary: '#9CA3AF',
+  border: '#F0F0F0',
+  success: '#10B981',
+  successLight: '#ECFDF5',
+};
 
 export const RecommendationsScreen = ({ navigation, route }) => {
   const { completeOnboarding } = useContext(AuthContext);
@@ -17,13 +34,20 @@ export const RecommendationsScreen = ({ navigation, route }) => {
   const [recommendedSplits, setRecommendedSplits] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(24)).current;
+  const scaleBtn = useRef(new Animated.Value(1)).current;
+
   useEffect(() => {
     generateRecommendations();
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 500, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]).start();
   }, []);
 
   const generateRecommendations = () => {
     let recommendations = [];
-
     switch (biomechanicsType) {
       case 'type_fullbody':
         recommendations = ['fullbody', 'upper-lower'];
@@ -44,21 +68,16 @@ export const RecommendationsScreen = ({ navigation, route }) => {
           recommendations = ['ppl', 'arnold-split'];
         }
     }
-
     setRecommendedSplits(recommendations);
   };
 
   const handleCompleteOnboarding = async () => {
     setLoading(true);
-
     try {
       console.log('Completando onboarding desde RecommendationsScreen...');
-
       const result = await completeOnboarding();
-
       if (result.success) {
         console.log('Onboarding completado exitosamente');
-
         Alert.alert(
           '¡Bienvenido a SCIENCEFIT!',
           'Tu perfil ha sido configurado correctamente',
@@ -79,13 +98,10 @@ export const RecommendationsScreen = ({ navigation, route }) => {
       console.error('Error inesperado completando onboarding:', error);
       Alert.alert('Error', 'Ocurrió un error inesperado. Intenta nuevamente.');
     }
-
     setLoading(false);
   };
 
-  const getSplitData = (splitKey) => {
-    return SPLITS_DATA[splitKey];
-  };
+  const getSplitData = (splitKey) => SPLITS_DATA[splitKey];
 
   const getBiomechanicsMessage = () => {
     switch (biomechanicsType) {
@@ -102,256 +118,311 @@ export const RecommendationsScreen = ({ navigation, route }) => {
     }
   };
 
+  const pressIn = () => Animated.timing(scaleBtn, { toValue: 0.97, duration: 100, useNativeDriver: true }).start();
+  const pressOut = () => Animated.timing(scaleBtn, { toValue: 1, duration: 100, useNativeDriver: true }).start();
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: '100%' }]} />
-        </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
-          <Text style={[styles.progressText, { marginTop: 0 }]}>Paso 3 de 3 - ¡Completado! </Text>
-          <Ionicons name="checkmark-circle-outline" size={12} color="#4CAF50" />
-        </View>
-      </View>
+    <SafeAreaView style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+        <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+          <Text style={styles.logo}>SCIENCEFIT</Text>
 
-      <Text style={styles.logo}>SCIENCEFIT</Text>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 5 }}>
-        <MaterialCommunityIcons name="target" size={22} color="#000" style={{ marginRight: 8 }} />
-        <Text style={[styles.title, { marginBottom: 0 }]}>Recomendaciones</Text>
-      </View>
-
-      <Text style={styles.subtitle}>Basadas en tu análisis biomecánico</Text>
-
-      <View style={styles.analysisResultContainer}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-          <Ionicons name="bar-chart-outline" size={16} color="#2E7D32" style={{ marginRight: 6 }} />
-          <Text style={[styles.analysisResultTitle, { marginBottom: 0 }]}>Resultado del Análisis</Text>
-        </View>
-        <Text style={styles.analysisResultText}>{getBiomechanicsMessage()}</Text>
-      </View>
-
-      <Text style={styles.sectionTitle}>Rutinas Recomendadas para ti:</Text>
-
-      {recommendedSplits.map((splitKey, index) => {
-        const split = getSplitData(splitKey);
-        if (!split) return null;
-
-        return (
-          <View key={splitKey} style={styles.splitCard}>
-            <View style={styles.splitHeader}>
-              <View style={styles.splitBadge}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  {index === 0 ? (
-                    <Ionicons name="star-outline" size={12} color="#F57C00" style={{ marginRight: 4 }} />
-                  ) : (
-                    <MaterialCommunityIcons name="fire" size={12} color="#F57C00" style={{ marginRight: 4 }} />
-                  )}
-                  <Text style={styles.splitBadgeText}>
-                    {index === 0 ? 'Mejor Opción' : 'Alternativa'}
-                  </Text>
-                </View>
-              </View>
+          <View style={styles.progressSection}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: '100%' }]} />
             </View>
-
-            <MaterialCommunityIcons
-              name={split.icon}
-              size={40}
-              color="#555"
-              style={{ alignSelf: 'center', marginBottom: 10 }}
-            />
-            <Text style={styles.splitName}>{split.name}</Text>
-            <Text style={styles.splitDescription}>{split.description}</Text>
-
-            <View style={styles.splitInfo}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Días por semana:</Text>
-                <Text style={styles.infoValue}>
-                  {Object.keys(split.days).length}
-                </Text>
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Nivel:</Text>
-                <Text style={styles.infoValue}>
-                  {splitKey === 'fullbody' || splitKey === 'upper-lower'
-                    ? 'Principiante-Intermedio'
-                    : 'Intermedio-Avanzado'}
-                </Text>
-              </View>
+            <View style={styles.progressRow}>
+              <Text style={styles.progressLabel}>Paso 3 de 3 — Completado</Text>
+              <Ionicons name="checkmark-circle" size={14} color={COLORS.success} />
             </View>
           </View>
-        );
-      })}
 
-      <View style={styles.noteContainer}>
-        <Ionicons name="bulb-outline" size={24} color="#666" style={{ marginRight: 10 }} />
-        <Text style={styles.noteText}>
-          Estas son solo recomendaciones. Podrás elegir cualquier rutina desde la app.
-        </Text>
-      </View>
+          <Text style={styles.title}>Tus recomendaciones</Text>
+          <Text style={styles.subtitle}>Basadas en tu análisis biomecánico personalizado</Text>
 
-      <CustomButton
-        title={loading ? "Finalizando..." : "Ir a la Página Principal"}
-        onPress={handleCompleteOnboarding}
-        disabled={loading}
-      />
-    </ScrollView>
+          <View style={styles.resultCard}>
+            <View style={styles.resultCardHeader}>
+              <Ionicons name="bar-chart-outline" size={16} color={COLORS.success} />
+              <Text style={styles.resultCardLabel}>Resultado del análisis</Text>
+            </View>
+            <Text style={styles.resultCardText}>{getBiomechanicsMessage()}</Text>
+          </View>
+
+          <Text style={styles.sectionTitle}>Rutinas recomendadas</Text>
+
+          {recommendedSplits.map((splitKey, index) => {
+            const split = getSplitData(splitKey);
+            if (!split) return null;
+            return (
+              <View key={splitKey} style={[styles.splitCard, index === 0 && styles.splitCardPrimary]}>
+                <View style={styles.splitCardTop}>
+                  <View style={[styles.rankBadge, index === 0 ? styles.rankBadgePrimary : styles.rankBadgeSecondary]}>
+                    <Text style={[styles.rankBadgeText, index === 0 ? styles.rankBadgeTextPrimary : styles.rankBadgeTextSecondary]}>
+                      {index === 0 ? 'Mejor opción' : 'Alternativa'}
+                    </Text>
+                  </View>
+                  <MaterialCommunityIcons
+                    name={split.icon}
+                    size={28}
+                    color={index === 0 ? COLORS.primary : COLORS.textTertiary}
+                  />
+                </View>
+                <Text style={[styles.splitName, index === 0 && styles.splitNamePrimary]}>{split.name}</Text>
+                <Text style={styles.splitDescription}>{split.description}</Text>
+                <View style={styles.splitMeta}>
+                  <View style={styles.splitMetaItem}>
+                    <Text style={styles.splitMetaValue}>{Object.keys(split.days).length}</Text>
+                    <Text style={styles.splitMetaLabel}>días/semana</Text>
+                  </View>
+                  <View style={styles.splitMetaDivider} />
+                  <View style={styles.splitMetaItem}>
+                    <Text style={styles.splitMetaValue}>
+                      {splitKey === 'fullbody' || splitKey === 'upper-lower' ? 'Princ.' : 'Avanzado'}
+                    </Text>
+                    <Text style={styles.splitMetaLabel}>nivel</Text>
+                  </View>
+                </View>
+              </View>
+            );
+          })}
+
+          <View style={styles.noteCard}>
+            <Ionicons name="information-circle-outline" size={18} color={COLORS.textTertiary} />
+            <Text style={styles.noteText}>
+              Estas son recomendaciones basadas en tu análisis. Podrás elegir cualquier rutina desde la app.
+            </Text>
+          </View>
+
+          <Animated.View style={{ transform: [{ scale: scaleBtn }] }}>
+            <TouchableOpacity
+              style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
+              onPress={handleCompleteOnboarding}
+              onPressIn={pressIn}
+              onPressOut={pressOut}
+              disabled={loading}
+              activeOpacity={1}
+            >
+              <Text style={styles.primaryBtnText}>
+                {loading ? 'Finalizando...' : 'Ir a la página principal'}
+              </Text>
+              {!loading && <Ionicons name="arrow-forward" size={18} color="#fff" style={{ marginLeft: 8 }} />}
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: COLORS.background,
+  },
   container: {
     flexGrow: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 30,
-    paddingTop: 60,
-    paddingBottom: 30,
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 40,
   },
-  progressContainer: {
-    marginBottom: 30,
+  logo: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: COLORS.primary,
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 28,
+  },
+  progressSection: {
+    marginBottom: 32,
   },
   progressBar: {
-    height: 4,
-    backgroundColor: '#f0f0f0',
+    height: 3,
+    backgroundColor: COLORS.border,
     borderRadius: 2,
     overflow: 'hidden',
+    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: COLORS.success,
+    borderRadius: 2,
   },
-  progressText: {
+  progressRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  progressLabel: {
     fontSize: 12,
-    color: '#4CAF50',
-    marginTop: 8,
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  logo: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#D32F2F',
-    textAlign: 'center',
-    marginBottom: 20,
+    color: COLORS.success,
+    fontWeight: '500',
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  analysisResultContainer: {
-    backgroundColor: '#E8F5E9',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 25,
-    borderWidth: 1,
-    borderColor: '#4CAF50',
-  },
-  analysisResultTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2E7D32',
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    letterSpacing: -0.3,
     marginBottom: 8,
   },
-  analysisResultText: {
+  subtitle: {
+    fontSize: 15,
+    color: COLORS.textSecondary,
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  resultCard: {
+    backgroundColor: COLORS.successLight,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 28,
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+  },
+  resultCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  resultCardLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.success,
+  },
+  resultCardText: {
     fontSize: 14,
-    color: '#1B5E20',
+    color: '#065F46',
     lineHeight: 20,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 15,
+    fontSize: 17,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 16,
+    letterSpacing: -0.2,
   },
   splitCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: COLORS.surface,
+    borderRadius: 16,
     padding: 20,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: '#f0f0f0',
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: COLORS.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
   },
-  splitHeader: {
-    marginBottom: 10,
+  splitCardPrimary: {
+    borderColor: COLORS.primary,
+    backgroundColor: '#FFFCFC',
   },
-  splitBadge: {
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  splitCardTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  rankBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 20,
-    alignSelf: 'flex-start',
   },
-  splitBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#F57C00',
+  rankBadgePrimary: {
+    backgroundColor: COLORS.primaryLight,
   },
-  splitIcon: {
-    fontSize: 40,
-    textAlign: 'center',
-    marginBottom: 10,
+  rankBadgeSecondary: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  rankBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.2,
+  },
+  rankBadgeTextPrimary: {
+    color: COLORS.primary,
+  },
+  rankBadgeTextSecondary: {
+    color: COLORS.textTertiary,
   },
   splitName: {
     fontSize: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 8,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 6,
+    letterSpacing: -0.2,
+  },
+  splitNamePrimary: {
+    color: COLORS.primary,
   },
   splitDescription: {
     fontSize: 14,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 15,
+    color: COLORS.textSecondary,
     lineHeight: 20,
+    marginBottom: 16,
   },
-  splitInfo: {
+  splitMeta: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: 15,
+    alignItems: 'center',
+    paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
+    borderTopColor: COLORS.border,
   },
-  infoItem: {
+  splitMetaItem: {
+    flex: 1,
     alignItems: 'center',
   },
-  infoLabel: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
+  splitMetaValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: 2,
   },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
+  splitMetaLabel: {
+    fontSize: 11,
+    color: COLORS.textTertiary,
+    fontWeight: '500',
   },
-  noteContainer: {
+  splitMetaDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: COLORS.border,
+  },
+  noteCard: {
     flexDirection: 'row',
-    backgroundColor: '#F5F5F5',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  noteIcon: {
-    fontSize: 24,
-    marginRight: 10,
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 24,
   },
   noteText: {
     flex: 1,
     fontSize: 13,
-    color: '#666',
+    color: COLORS.textTertiary,
     lineHeight: 18,
+  },
+  primaryBtn: {
+    height: 56,
+    backgroundColor: COLORS.primary,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primaryBtnDisabled: {
+    opacity: 0.6,
+  },
+  primaryBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
 });

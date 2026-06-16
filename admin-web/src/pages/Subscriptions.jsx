@@ -5,50 +5,39 @@ import Badge from '../components/Badge.jsx'
 import Modal from '../components/Modal.jsx'
 import StatCard from '../components/StatCard.jsx'
 
+const IconUsers = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="9" cy="7" r="4" /><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" /><path d="M21 21v-2a4 4 0 0 0-3-3.85" />
+  </svg>
+)
+const IconRevenue = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+  </svg>
+)
+const IconWarning = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+)
+const IconClock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+  </svg>
+)
 const IconSearch = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 )
 
-const IconUsers = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="9" cy="7" r="4" />
-    <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    <path d="M21 21v-2a4 4 0 0 0-3-3.85" />
-  </svg>
-)
-
-const IconMoney = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="1" x2="12" y2="23" />
-    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-  </svg>
-)
-
-const IconClock = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <polyline points="12 6 12 12 16 14" />
-  </svg>
-)
-
-const IconPending = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="12" y1="8" x2="12" y2="12" />
-    <line x1="12" y1="16" x2="12.01" y2="16" />
-  </svg>
-)
-
 const PLAN_OPTIONS = [
-  { value: 'max', label: 'MAX ($20/mes)' },
-  { value: 'max_plicometro', label: 'MAX + Plicómetro ($40/mes)' },
+  { value: 'free', label: 'FREE' },
+  { value: 'max', label: 'MAX' },
+  { value: 'max_plicometro', label: 'MAX + Plicómetro' },
 ]
-
-const PLAN_AMOUNTS = { max: 20, max_plicometro: 40 }
-const AVATAR_COLORS = ['#C62828', '#1565C0', '#2E7D32', '#6A1B9A', '#E65100', '#00695C', '#C75000']
 
 const parseDate = (val) => {
   if (!val) return null
@@ -64,10 +53,10 @@ const getDaysRemaining = (expiry) => {
 }
 
 export default function Subscriptions() {
-  const [subscribers, setSubscribers] = useState([])
+  const [subs, setSubs] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [planFilter, setPlanFilter] = useState('all')
+  const [planFilter, setPlanFilter] = useState('')
   const [actionLoading, setActionLoading] = useState(null)
   const [changePlanModal, setChangePlanModal] = useState(null)
   const [newPlan, setNewPlan] = useState('')
@@ -77,14 +66,15 @@ export default function Subscriptions() {
   const loadData = async () => {
     try {
       const snap = await getDocs(collection(db, 'users'))
-      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }))
-      const subs = all.filter(u => u.plan === 'max' || u.plan === 'max_plicometro')
-      subs.sort((a, b) => {
-        const da = parseDate(a.createdAt) || new Date(0)
-        const db2 = parseDate(b.createdAt) || new Date(0)
-        return db2 - da
+      const all = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(u => u.plan && u.plan !== 'free')
+      all.sort((a, b) => {
+        const da = parseDate(a.planExpiry) || new Date(0)
+        const db2 = parseDate(b.planExpiry) || new Date(0)
+        return da - db2
       })
-      setSubscribers(subs)
+      setSubs(all)
     } catch (err) {
       console.error('Subscriptions load error:', err)
     } finally {
@@ -96,14 +86,14 @@ export default function Subscriptions() {
     setActionLoading(userId)
     try {
       const base = parseDate(currentExpiry) || new Date()
+      if (base < new Date()) base.setTime(new Date().getTime())
       const newExpiry = new Date(base)
       newExpiry.setDate(newExpiry.getDate() + 30)
       await updateDoc(doc(db, 'users', userId), {
         planExpiry: Timestamp.fromDate(newExpiry),
-        planStatus: 'active',
       })
-      setSubscribers(prev => prev.map(u =>
-        u.id === userId ? { ...u, planExpiry: Timestamp.fromDate(newExpiry), planStatus: 'active' } : u
+      setSubs(prev => prev.map(u =>
+        u.id === userId ? { ...u, planExpiry: { toDate: () => newExpiry } } : u
       ))
     } catch (err) {
       console.error('Extend error:', err)
@@ -115,8 +105,12 @@ export default function Subscriptions() {
   const cancelSubscription = async (userId) => {
     setActionLoading(userId)
     try {
-      await updateDoc(doc(db, 'users', userId), { planStatus: 'cancelled' })
-      setSubscribers(prev => prev.map(u => u.id === userId ? { ...u, planStatus: 'cancelled' } : u))
+      await updateDoc(doc(db, 'users', userId), {
+        planStatus: 'cancelled',
+      })
+      setSubs(prev => prev.map(u =>
+        u.id === userId ? { ...u, planStatus: 'cancelled' } : u
+      ))
     } catch (err) {
       console.error('Cancel error:', err)
     } finally {
@@ -124,12 +118,12 @@ export default function Subscriptions() {
     }
   }
 
-  const applyPlanChange = async () => {
-    if (!newPlan || !changePlanModal) return
-    setActionLoading(changePlanModal.id)
+  const applyPlanChange = async (userId) => {
+    if (!newPlan) return
+    setActionLoading(userId)
     try {
-      await updateDoc(doc(db, 'users', changePlanModal.id), { plan: newPlan })
-      setSubscribers(prev => prev.map(u => u.id === changePlanModal.id ? { ...u, plan: newPlan } : u))
+      await updateDoc(doc(db, 'users', userId), { plan: newPlan })
+      setSubs(prev => prev.map(u => u.id === userId ? { ...u, plan: newPlan } : u))
       setChangePlanModal(null)
       setNewPlan('')
     } catch (err) {
@@ -140,60 +134,84 @@ export default function Subscriptions() {
   }
 
   const now = new Date()
-  const thisWeekEnd = new Date(now)
-  thisWeekEnd.setDate(now.getDate() + 7)
+  const thisWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
 
-  const activeCount = subscribers.filter(u => u.planStatus === 'active').length
-  const pendingCount = subscribers.filter(u => u.planStatus === 'pending').length
-  const monthlyRevenue = subscribers
-    .filter(u => u.planStatus === 'active')
-    .reduce((sum, u) => sum + (PLAN_AMOUNTS[u.plan] || 0), 0)
-  const expiringThisWeek = subscribers.filter(u => {
-    const d = getDaysRemaining(u.planExpiry)
-    return d !== null && d >= 0 && d <= 7
+  const activeCount   = subs.filter(u => u.planStatus === 'active').length
+  const pendingCount  = subs.filter(u => u.planStatus === 'pending').length
+  const expiringCount = subs.filter(u => {
+    const exp = parseDate(u.planExpiry)
+    return exp && exp > now && exp <= thisWeek && u.planStatus === 'active'
   }).length
+  const monthlyRevenue = subs
+    .filter(u => u.planStatus === 'active')
+    .reduce((acc, u) => {
+      const prices = { max: 20, max_plicometro: 40 }
+      return acc + (prices[u.plan] || 0)
+    }, 0)
 
-  const filtered = subscribers.filter(u => {
-    const matchSearch = (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
+  const filtered = subs.filter(u => {
+    const matchSearch = !search ||
+      (u.name || '').toLowerCase().includes(search.toLowerCase()) ||
       (u.email || '').toLowerCase().includes(search.toLowerCase())
-    const matchPlan = planFilter === 'all' || u.plan === planFilter
+    const matchPlan = !planFilter || u.plan === planFilter
     return matchSearch && matchPlan
   })
 
-  const card = { background: '#fff', borderRadius: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }
+  if (loading) {
+    return (
+      <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="card-static" style={{ flex: 1, minWidth: 180, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div className="skeleton" style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0 }} />
+              <div style={{ flex: 1 }}>
+                <div className="skeleton" style={{ width: '50%', height: 32, marginBottom: 8, borderRadius: 6 }} />
+                <div className="skeleton skeleton-text" style={{ width: '70%' }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="card-static" style={{ height: 300 }}>
+          <div className="skeleton" style={{ height: '100%', borderRadius: 'var(--radius-card)' }} />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="page-container" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-      <div className="fade-in-up" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <StatCard icon={<IconUsers />}   value={activeCount}       label="Suscriptores Activos"     accent="#C62828" />
-        <StatCard icon={<IconMoney />}   value={monthlyRevenue}    label="Ingresos del Mes (USD)"   accent="#2E7D32" />
-        <StatCard icon={<IconClock />}   value={expiringThisWeek}  label="Vencen Esta Semana"       accent="#F57F17" />
-        <StatCard icon={<IconPending />} value={pendingCount}      label="Pendientes de Aprobación" accent="#6A1B9A" />
+      {/* Stat cards */}
+      <div className="page-enter" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+        <StatCard icon={<IconUsers />}   value={activeCount}    label="Suscripciones activas"   accent="#C62828" />
+        <StatCard icon={<IconRevenue />} value={monthlyRevenue} label="Ingresos estimados / mes"  accent="#16A34A" />
+        <StatCard icon={<IconWarning />} value={expiringCount}  label="Vencen esta semana"        accent="#D97706" />
+        <StatCard icon={<IconClock />}   value={pendingCount}   label="Pendientes de pago"        accent="#7c3aed" />
       </div>
 
-      <div className="fade-in-up-1">
+      {/* Table */}
+      <div className="page-enter-1">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
-            Suscripciones
-            <span style={{ marginLeft: 8, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)' }}>
-              ({filtered.length})
-            </span>
-          </h2>
-
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+              Suscripciones
+              <span style={{ fontSize: 13, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
+                {filtered.length}
+              </span>
+            </h2>
+          </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <select
-              className="input-field"
               value={planFilter}
               onChange={e => setPlanFilter(e.target.value)}
-              style={{ width: 160 }}
+              className="input-field"
+              style={{ height: 40, padding: '0 12px', width: 160, fontSize: 13 }}
             >
-              <option value="all">Todos los planes</option>
-              <option value="max">MAX</option>
-              <option value="max_plicometro">MAX + Plicómetro</option>
+              <option value="">Todos los planes</option>
+              {PLAN_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
             </select>
             <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#B0B0B0', display: 'flex' }}>
+              <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-tertiary)', display: 'flex', pointerEvents: 'none' }}>
                 <IconSearch />
               </span>
               <input
@@ -202,167 +220,174 @@ export default function Subscriptions() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar usuario..."
-                style={{ paddingLeft: 34, width: 220 }}
+                style={{ paddingLeft: 36, width: 220, height: 40 }}
               />
             </div>
           </div>
         </div>
 
-        <div style={card}>
-          {loading ? (
-            <div style={{ padding: 16 }}>
-              {[1,2,3].map(i => (
-                <div key={i} style={{ display: 'flex', gap: 16, padding: '14px 16px', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
-                  <div className="skeleton" style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}><div className="skeleton skeleton-text" style={{ width: '40%', marginBottom: 6 }} /></div>
-                  <div className="skeleton skeleton-text" style={{ width: 60 }} />
-                  <div className="skeleton skeleton-text" style={{ width: 80 }} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table>
-                <thead>
+        <div className="card-static" style={{ overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Plan</th>
+                  <th>Monto</th>
+                  <th>Inicio</th>
+                  <th>Vencimiento</th>
+                  <th>Días</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
                   <tr>
-                    <th>Usuario</th>
-                    <th>Email</th>
-                    <th>Plan</th>
-                    <th>Monto</th>
-                    <th>Inicio</th>
-                    <th>Vencimiento</th>
-                    <th style={{ minWidth: 80 }}>Días</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
+                    <td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-tertiary)', padding: '52px 16px', fontSize: 13 }}>
+                      No hay suscripciones que coincidan
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: 48 }}>
-                      No se encontraron suscripciones
-                    </td></tr>
-                  ) : filtered.map((u, idx) => {
-                    const days = getDaysRemaining(u.planExpiry)
-                    const isUrgent = days !== null && days < 7 && days >= 0
-                    const isExpired = days !== null && days < 0
-                    const rowClass = isUrgent ? 'row-warning' : isExpired ? 'row-danger' : ''
-                    const startDate = parseDate(u.paymentDate || u.createdAt)
-                    const expiryDate = parseDate(u.planExpiry)
+                ) : filtered.map(u => {
+                  const days = getDaysRemaining(u.planExpiry)
+                  const isUrgent  = days !== null && days >= 0 && days < 7
+                  const isExpired = days !== null && days < 0
+                  const prices = { max: 20, max_plicometro: 40, free: 0 }
 
-                    return (
-                      <tr key={u.id} className={rowClass}>
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{
-                              width: 36, height: 36, borderRadius: '50%',
-                              background: AVATAR_COLORS[idx % AVATAR_COLORS.length],
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
-                            }}>
-                              {(u.name || u.email || '?').charAt(0).toUpperCase()}
-                            </div>
-                            <span style={{ fontWeight: 500 }}>{u.name || '—'}</span>
+                  return (
+                    <tr key={u.id} className={isExpired ? 'row-danger' : isUrgent ? 'row-warning' : ''}>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                          <div style={{
+                            width: 30, height: 30, borderRadius: '50%',
+                            background: u.planStatus === 'cancelled' ? '#D1D5DB' : 'var(--primary)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: '#fff', fontSize: 11, fontWeight: 700, flexShrink: 0,
+                          }}>
+                            {(u.name || u.email || '?').charAt(0).toUpperCase()}
                           </div>
-                        </td>
-                        <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{u.email}</td>
-                        <td><Badge variant={u.plan} /></td>
-                        <td style={{ fontWeight: 600 }}>${PLAN_AMOUNTS[u.plan] || 0}</td>
-                        <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                          {startDate?.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) || '—'}
-                        </td>
-                        <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
-                          {expiryDate?.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) || '—'}
-                        </td>
-                        <td>
-                          {days !== null ? (
-                            <span style={{
-                              fontSize: 16,
-                              fontWeight: 800,
-                              color: isExpired ? 'var(--primary)' : isUrgent ? 'var(--warning)' : 'var(--success)',
-                              letterSpacing: '-0.02em',
-                            }}>
-                              {isExpired ? 'Vencido' : `${days}d`}
-                            </span>
-                          ) : '—'}
-                        </td>
-                        <td>
-                          <Badge variant={u.planStatus || 'active'} />
-                        </td>
-                        <td>
-                          <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                            <button
-                              className="btn btn-success"
-                              style={{ padding: '5px 10px', fontSize: 11, opacity: actionLoading === u.id ? 0.6 : 1 }}
-                              onClick={() => extendSubscription(u.id, u.planExpiry)}
-                              disabled={actionLoading === u.id}
-                              title="Extender 30 días"
-                            >
-                              +30d
-                            </button>
-                            <button
-                              className="btn btn-ghost"
-                              style={{ padding: '5px 10px', fontSize: 11, borderColor: 'var(--primary)', color: 'var(--primary)' }}
-                              onClick={() => { setChangePlanModal(u); setNewPlan(u.plan) }}
-                              title="Cambiar plan"
-                            >
-                              Plan
-                            </button>
-                            <button
-                              className="btn btn-danger"
-                              style={{ padding: '5px 10px', fontSize: 11, opacity: actionLoading === u.id ? 0.6 : 1 }}
-                              onClick={() => cancelSubscription(u.id)}
-                              disabled={actionLoading === u.id}
-                              title="Cancelar"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                          <span style={{ fontWeight: 500, fontSize: 13.5 }}>{u.name || '—'}</span>
+                        </div>
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>{u.email}</td>
+                      <td><Badge variant={u.plan || 'free'} /></td>
+                      <td style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+                        ${prices[u.plan] ?? 0}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                        {parseDate(u.createdAt)?.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) || '—'}
+                      </td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                        {parseDate(u.planExpiry)?.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) || '—'}
+                      </td>
+                      <td>
+                        <span style={{
+                          fontSize: 13, fontWeight: 600, fontVariantNumeric: 'tabular-nums',
+                          color: isExpired ? 'var(--danger)' : isUrgent ? 'var(--warning)' : 'var(--text-secondary)',
+                        }}>
+                          {days === null ? '—' : isExpired ? 'Vencido' : `${days}d`}
+                        </span>
+                      </td>
+                      <td><Badge variant={u.planStatus || 'active'} /></td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ color: 'var(--primary)', borderColor: 'var(--primary-border)' }}
+                            onClick={() => { setChangePlanModal(u); setNewPlan(u.plan || 'free') }}
+                          >
+                            Plan
+                          </button>
+                          <button
+                            className="btn btn-success btn-sm"
+                            style={{ opacity: actionLoading === u.id ? 0.6 : 1 }}
+                            onClick={() => extendSubscription(u.id, u.planExpiry)}
+                            disabled={actionLoading === u.id}
+                          >
+                            +30d
+                          </button>
+                          <button
+                            className="btn btn-soft-danger btn-sm"
+                            style={{ opacity: actionLoading === u.id ? 0.6 : 1 }}
+                            onClick={() => cancelSubscription(u.id)}
+                            disabled={actionLoading === u.id || u.planStatus === 'cancelled'}
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
+      {/* Change plan modal */}
       {changePlanModal && (
         <Modal
-          title={`Cambiar Plan — ${changePlanModal.name || changePlanModal.email}`}
+          title="Cambiar plan"
           onClose={() => { setChangePlanModal(null); setNewPlan('') }}
           footer={
             <>
-              <button className="btn btn-ghost" onClick={() => { setChangePlanModal(null); setNewPlan('') }}>
-                Cancelar
-              </button>
               <button
                 className="btn btn-primary"
-                onClick={applyPlanChange}
+                onClick={() => applyPlanChange(changePlanModal.id)}
                 disabled={!newPlan || actionLoading === changePlanModal.id}
               >
-                {actionLoading === changePlanModal.id ? 'Guardando...' : 'Guardar cambio'}
+                {actionLoading === changePlanModal.id ? 'Guardando...' : 'Aplicar cambio'}
+              </button>
+              <button className="btn btn-ghost" onClick={() => { setChangePlanModal(null); setNewPlan('') }}>
+                Cancelar
               </button>
             </>
           }
         >
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 16 }}>
-            Plan actual: <Badge variant={changePlanModal.plan} />
-          </p>
-          <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#555', marginBottom: 8 }}>
-            Nuevo plan
-          </label>
-          <select
-            className="input-field"
-            value={newPlan}
-            onChange={e => setNewPlan(e.target.value)}
-          >
-            <option value="">Seleccionar plan...</option>
-            {PLAN_OPTIONS.map(p => (
-              <option key={p.value} value={p.value}>{p.label}</option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 22, paddingBottom: 20, borderBottom: '1px solid var(--border-light)' }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%', background: 'var(--primary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 17, fontWeight: 700, flexShrink: 0,
+            }}>
+              {(changePlanModal.name || changePlanModal.email || '?').charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
+                {changePlanModal.name || '—'}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>
+                {changePlanModal.email}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label style={{
+              display: 'block', fontSize: 12, fontWeight: 500,
+              color: 'var(--text-secondary)', textTransform: 'uppercase',
+              letterSpacing: '0.06em', marginBottom: 8,
+            }}>
+              Nuevo plan
+            </label>
+            <select
+              value={newPlan}
+              onChange={e => setNewPlan(e.target.value)}
+              className="input-field"
+              style={{ width: '100%' }}
+            >
+              <option value="">Seleccionar plan...</option>
+              {PLAN_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+            </select>
+          </div>
+
+          <div style={{ marginTop: 16, padding: '12px 14px', background: 'var(--surface)', borderRadius: 10, border: '1px solid var(--border-light)' }}>
+            <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+              Plan actual: <strong style={{ color: 'var(--text-primary)' }}>{changePlanModal.plan?.toUpperCase() || 'FREE'}</strong>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
