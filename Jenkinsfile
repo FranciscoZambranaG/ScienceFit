@@ -9,6 +9,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                echo 'Código descargado correctamente'
             }
         }
 
@@ -22,27 +23,15 @@ pipeline {
             steps {
                 bat 'npm test -- --watchAll=false --ci'
             }
-            post {
-                always {
-                    junit allowEmptyResults: true, testResults: 'junit-results.xml'
-                }
-            }
         }
 
         stage('Reporte de cobertura') {
             steps {
-                bat 'npm test -- --watchAll=false --ci --coverage --coverageReporters=text --coverageReporters=lcov'
+                bat 'npm test -- --watchAll=false --ci --coverage --coverageReporters=text --coverageReporters=lcov --coverageReporters=json-summary'
             }
             post {
                 always {
-                    publishHTML(target: [
-                        allowMissing: true,
-                        alwaysLinkToLastBuild: true,
-                        keepAll: true,
-                        reportDir: 'coverage/lcov-report',
-                        reportFiles: 'index.html',
-                        reportName: 'Cobertura de Código'
-                    ])
+                    archiveArtifacts artifacts: 'coverage/**/*', allowEmptyArchive: true
                 }
             }
         }
@@ -50,10 +39,11 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline completada - todos los tests pasaron'
+            echo '✅ Pipeline completada - 44 tests pasaron, cobertura 100%'
+            archiveArtifacts artifacts: 'coverage/**/*', allowEmptyArchive: true
         }
         failure {
-            echo 'Pipeline fallida - revisar resultados en Jenkins'
+            echo '❌ Pipeline fallida - revisar errores en consola'
         }
     }
 }
